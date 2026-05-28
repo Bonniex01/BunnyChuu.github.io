@@ -1,1389 +1,1855 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gacha Drop Rate Simulator</title>
-  <style>
-    :root {
-      --rouge:       #951e32;
-      --burgundy:    #450e10;
-      --near-black:  #231514;
-      --rose-pink:   #de7c7c;
-      --rose-light:  #f8ecec;
-      --rose-mid:    #f0d5d5;
-      --bg:          #fdf5f5;
-      --card:        #ffffff;
-      --text:        #231514;
-      --muted:       #7a3d3d;
-      --border:      #e8cccc;
-      --ssr:         #f59e0b;
-      --sr:          #8b5cf6;
-      --r:           #3b82f6;
-      --n:           #6b7280;
-    }
-    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🐰 BunnyChuu Gacha Simulator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* =============================================================
+   RESET & CSS CUSTOM PROPERTIES
+============================================================= */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  /* backgrounds */
+  --bg:#F8FAFC;
+  --surface:#FFFFFF;
+  /* brand gradients */
+  --grad:#F472B6,#C084FC;
+  --grad-btn:linear-gradient(135deg,#F472B6,#C084FC);
+  --grad-btn-hov:linear-gradient(135deg,#EC4899,#A855F7);
+  --grad-gold:linear-gradient(135deg,#FBBF24,#F59E0B);
+  --grad-green:linear-gradient(135deg,#34D399,#10B981);
+  --grad-red:linear-gradient(135deg,#F87171,#EF4444);
+  --grad-slate:linear-gradient(135deg,#94A3B8,#64748B);
+  /* rarity solids */
+  --ssr:#FBBF24;--sr:#C084FC;--r:#60A5FA;--n:#94A3B8;
+  /* text */
+  --tx1:#0F172A;--tx2:#1E293B;--tx3:#64748B;--tx4:#94A3B8;
+  /* border & shadow */
+  --bdr:#E2E8F0;
+  --sh1:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh2:0 4px 12px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.04);
+  --sh3:0 10px 24px rgba(0,0,0,.08);
+  /* radii */
+  --r4:4px;--r8:8px;--r12:12px;--r16:16px;--rpill:999px;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Segoe UI','Noto Sans Thai',system-ui,Arial,sans-serif;
+  background:var(--bg);color:var(--tx2);min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+/* scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#F1F5F9;border-radius:3px}
+::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#94A3B8}
 
-    /* ── HEADER ── */
-    .app-header {
-      background:var(--near-black);
-      border-bottom:3px solid var(--rouge);
-      padding:0 2rem;
-      position:sticky; top:0; z-index:200;
-    }
-    .header-inner {
-      max-width:1440px; margin:0 auto;
-      display:flex; align-items:stretch; justify-content:space-between;
-      gap:1rem;
-    }
-    .brand { display:flex; align-items:center; gap:.75rem; padding:1rem 0; }
-    .brand-gem {
-      width:38px; height:38px; border-radius:10px;
-      background:linear-gradient(135deg,var(--rouge),var(--rose-pink));
-      display:flex; align-items:center; justify-content:center;
-      font-size:1.2rem; flex-shrink:0;
-    }
-    .brand-name { font-size:1.15rem; font-weight:700; color:#fff; letter-spacing:-.02em; }
-    .brand-name span { color:var(--rose-pink); }
-    .brand-sub { font-size:.7rem; color:#888; margin-top:2px; }
-    .nav-tabs { display:flex; align-items:center; gap:.25rem; }
-    .nav-tab {
-      padding:.55rem 1.1rem;
-      border-radius:6px; border:none;
-      background:transparent; color:#aaa;
-      cursor:pointer; font-size:.82rem; font-weight:500;
-      transition:all .18s; white-space:nowrap;
-    }
-    .nav-tab:hover { background:#3a2020; color:#ddd; }
-    .nav-tab.active { background:var(--rouge); color:#fff; }
+/* =============================================================
+   APP SHELL
+============================================================= */
+/* ── Header ── */
+.app-header{
+  background:linear-gradient(135deg,#F472B6 0%,#C084FC 100%);
+  padding:28px 24px 22px;text-align:center;
+  box-shadow:0 4px 24px rgba(244,114,182,.4);
+  position:relative;overflow:hidden;
+}
+.app-header::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 20% 50%,rgba(255,255,255,.12) 0%,transparent 60%),
+             radial-gradient(circle at 80% 20%,rgba(255,255,255,.08) 0%,transparent 50%);
+}
+.app-header h1{
+  position:relative;color:#fff;font-size:clamp(1.5rem,4vw,2.2rem);
+  font-weight:900;letter-spacing:-.5px;
+  text-shadow:0 2px 12px rgba(0,0,0,.15);
+}
+.app-header p{
+  position:relative;color:rgba(255,255,255,.88);
+  font-size:.9rem;margin-top:5px;letter-spacing:.2px;
+}
+/* ── Nav Tabs ── */
+.nav-bar{
+  display:flex;gap:8px;padding:13px 20px;
+  background:#fff;border-bottom:1px solid var(--bdr);
+  overflow-x:auto;box-shadow:var(--sh1);
+  position:sticky;top:0;z-index:300;
+}
+.nav-bar::-webkit-scrollbar{height:0}
+.tab-btn{
+  padding:9px 22px;border-radius:var(--rpill);
+  border:2px solid var(--bdr);background:#fff;
+  color:var(--tx3);font-size:.85rem;font-weight:700;
+  cursor:pointer;transition:all .2s ease;white-space:nowrap;
+  flex-shrink:0;font-family:inherit;
+}
+.tab-btn:hover{border-color:#F472B6;color:#F472B6;background:#FFF0F7}
+.tab-btn.active{
+  background:var(--grad-btn);border-color:transparent;
+  color:#fff;box-shadow:0 4px 14px rgba(244,114,182,.45);
+}
+/* ── Page wrapper ── */
+.page{max-width:1200px;margin:0 auto;padding:24px 18px 72px}
 
-    /* ── MOBILE NAV ── */
-    .mobile-nav {
-      display:none; overflow-x:auto; gap:.4rem;
-      padding:.6rem 1rem; background:#1a0f0f;
-      border-bottom:2px solid var(--rouge);
-    }
-    .mobile-nav button {
-      padding:.45rem .9rem; border-radius:5px; border:1px solid #3a2020;
-      background:transparent; color:#bbb; cursor:pointer;
-      font-size:.78rem; white-space:nowrap; transition:all .15s;
-    }
-    .mobile-nav button.active { background:var(--rouge); color:#fff; border-color:var(--rouge); }
+/* =============================================================
+   PANELS
+============================================================= */
+.panel{display:none}
+.panel.active{display:block}
 
-    /* ── MAIN ── */
-    .main { max-width:1440px; margin:0 auto; padding:1.75rem 2rem 3rem; }
-    .tab-panel { display:none; }
-    .tab-panel.active { display:block; }
+/* =============================================================
+   CARDS
+============================================================= */
+.card{
+  background:var(--surface);border-radius:var(--r16);
+  padding:24px;box-shadow:var(--sh2);
+  border:1px solid rgba(226,232,240,.65);margin-bottom:22px;
+}
+/* card title row */
+.card-title{
+  font-size:1rem;font-weight:800;color:var(--tx1);
+  margin-bottom:18px;display:flex;align-items:center;gap:10px;
+}
+.card-title::after{
+  content:'';flex:1;height:2px;
+  background:linear-gradient(90deg,#E2E8F0,transparent);
+  border-radius:2px;
+}
 
-    /* ── GRID LAYOUTS ── */
-    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
-    .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
-    .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; }
-    .grid-9 { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; }
+/* =============================================================
+   GRID HELPERS
+============================================================= */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:900px){.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:580px){.g4,.g3,.g2{grid-template-columns:1fr}}
 
-    /* ── CARD ── */
-    .card {
-      background:var(--card); border-radius:14px;
-      border:1px solid var(--border);
-      box-shadow:0 2px 12px rgba(35,21,20,.06);
-      overflow:hidden;
-    }
-    .card-head {
-      display:flex; align-items:center; gap:.75rem;
-      padding:1.25rem 1.5rem 1rem;
-      border-bottom:1.5px solid var(--rose-light);
-    }
-    .card-icon {
-      width:36px; height:36px; border-radius:9px; flex-shrink:0;
-      background:var(--rouge); display:flex; align-items:center;
-      justify-content:center; color:#fff; font-size:1.1rem;
-    }
-    .card-icon.gold { background:linear-gradient(135deg,#f59e0b,#d97706); }
-    .card-icon.purple { background:linear-gradient(135deg,#8b5cf6,#6d28d9); }
-    .card-icon.blue { background:linear-gradient(135deg,#3b82f6,#2563eb); }
-    .card-icon.green { background:linear-gradient(135deg,#10b981,#059669); }
-    .card-title { font-size:.95rem; font-weight:700; color:var(--near-black); }
-    .card-sub { font-size:.72rem; color:var(--muted); margin-top:2px; }
-    .card-body { padding:1.25rem 1.5rem; }
-    .card-foot {
-      padding:.85rem 1.5rem;
-      border-top:1px solid var(--rose-light);
-      background:var(--rose-light);
-      display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;
-    }
+/* =============================================================
+   FORM CONTROLS
+============================================================= */
+.form-group{margin-bottom:14px}
+.form-group:last-child{margin-bottom:0}
+.form-label{
+  display:block;font-size:.73rem;font-weight:700;
+  color:var(--tx3);margin-bottom:5px;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.form-input,.form-select{
+  width:100%;padding:10px 13px;
+  border:2px solid var(--bdr);border-radius:var(--r8);
+  font-size:.875rem;color:var(--tx2);background:#fff;
+  transition:border-color .2s,box-shadow .2s;
+  outline:none;font-family:inherit;
+}
+.form-input:focus,.form-select:focus{
+  border-color:#C084FC;
+  box-shadow:0 0 0 3px rgba(192,132,252,.13);
+}
+.form-input.has-error{border-color:#F87171}
+.field-error{
+  font-size:.76rem;color:#EF4444;
+  margin-top:4px;display:none;
+}
+.field-error.visible{display:block}
 
-    /* ── FORM ── */
-    .form-label {
-      display:block; font-size:.72rem; font-weight:600;
-      color:var(--muted); text-transform:uppercase;
-      letter-spacing:.06em; margin-bottom:.3rem;
-    }
-    .form-input, .form-select {
-      width:100%; padding:.58rem .85rem;
-      border:1.5px solid var(--border); border-radius:8px;
-      font-size:.875rem; background:#fff; color:var(--text);
-      transition:border-color .18s, box-shadow .18s;
-    }
-    .form-input:focus, .form-select:focus {
-      outline:none; border-color:var(--rouge);
-      box-shadow:0 0 0 3px rgba(149,30,50,.1);
-    }
-    .form-input.err { border-color:#ef4444; }
+/* =============================================================
+   BUTTONS
+============================================================= */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:10px 22px;border-radius:var(--rpill);border:none;
+  font-size:.875rem;font-weight:700;cursor:pointer;
+  transition:all .2s ease;white-space:nowrap;font-family:inherit;
+  text-decoration:none;
+}
+.btn-primary{
+  background:var(--grad-btn);color:#fff;
+  box-shadow:0 4px 14px rgba(244,114,182,.35);
+}
+.btn-primary:hover{
+  background:var(--grad-btn-hov);
+  box-shadow:0 6px 20px rgba(244,114,182,.5);
+  transform:translateY(-1px);
+}
+.btn-primary:active{transform:translateY(0)}
+.btn-outline{
+  background:#fff;color:#C084FC;
+  border:2px solid #C084FC;
+}
+.btn-outline:hover{background:#C084FC;color:#fff}
+.btn-danger{
+  background:#FFF1F2;color:#EF4444;
+  border:2px solid #FECACA;
+}
+.btn-danger:hover{background:#EF4444;color:#fff;border-color:#EF4444}
+.btn-success{
+  background:#F0FDF4;color:#16A34A;
+  border:2px solid #86EFAC;
+}
+.btn-success:hover{background:#16A34A;color:#fff;border-color:#16A34A}
+.btn-sm{padding:6px 14px;font-size:.79rem}
+.btn-xs{padding:4px 10px;font-size:.73rem}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 
-    /* ── BUTTONS ── */
-    .btn {
-      display:inline-flex; align-items:center; gap:.45rem;
-      padding:.58rem 1.1rem; border-radius:8px; border:none;
-      cursor:pointer; font-size:.845rem; font-weight:500;
-      transition:all .18s; white-space:nowrap;
-    }
-    .btn:disabled { opacity:.45; cursor:not-allowed; }
-    .btn-primary { background:var(--rouge); color:#fff; }
-    .btn-primary:hover:not(:disabled) { background:var(--burgundy); }
-    .btn-ghost { background:var(--rose-light); color:var(--rouge); border:1.5px solid var(--rose-pink); }
-    .btn-ghost:hover:not(:disabled) { background:var(--rose-pink); color:#fff; }
-    .btn-danger { background:#fee2e2; color:#dc2626; }
-    .btn-danger:hover:not(:disabled) { background:#dc2626; color:#fff; }
-    .btn-dark { background:var(--near-black); color:#fff; }
-    .btn-dark:hover:not(:disabled) { background:var(--burgundy); }
-    .btn-sm { padding:.32rem .7rem; font-size:.75rem; border-radius:6px; }
-    .btn-full { width:100%; justify-content:center; padding:.82rem; font-size:.95rem; font-weight:600; }
+/* =============================================================
+   RATE SETTINGS CARDS
+============================================================= */
+.rate-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:680px){.rate-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:380px){.rate-grid{grid-template-columns:1fr}}
 
-    /* ── RATE SECTION ── */
-    .rate-grid { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
-    .rate-row { display:flex; align-items:center; gap:.5rem; margin-bottom:.3rem; }
-    .rdot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-    .rdot.SSR { background:var(--ssr); }
-    .rdot.SR  { background:var(--sr); }
-    .rdot.R   { background:var(--r); }
-    .rdot.N   { background:var(--n); }
-    .rate-total-pill {
-      display:flex; align-items:center; justify-content:space-between;
-      padding:.65rem 1rem; border-radius:9px;
-      background:var(--rose-light); margin-top:1rem;
-      transition:background .25s;
-    }
-    .rate-total-pill.ok  { background:#dcfce7; }
-    .rate-total-pill.bad { background:#fee2e2; }
-    .rate-total-pill .label { font-size:.82rem; font-weight:500; }
-    .rate-total-pill .val   { font-size:1.1rem; font-weight:700; }
+.rate-card{
+  border-radius:var(--r12);padding:16px 13px;
+  text-align:center;border:2px solid transparent;
+  transition:box-shadow .2s,transform .2s;
+}
+.rate-card:hover{box-shadow:var(--sh2);transform:translateY(-2px)}
+.rate-card.ssr{background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border-color:#FBBF24}
+.rate-card.sr {background:linear-gradient(135deg,#FAF5FF,#F3E8FF);border-color:#C084FC}
+.rate-card.r  {background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border-color:#60A5FA}
+.rate-card.n  {background:linear-gradient(135deg,#F8FAFC,#F1F5F9);border-color:#CBD5E1}
+.rate-label{
+  font-size:.95rem;font-weight:800;
+  display:block;margin-bottom:9px;
+}
+.rate-card.ssr .rate-label{color:#D97706}
+.rate-card.sr  .rate-label{color:#9333EA}
+.rate-card.r   .rate-label{color:#2563EB}
+.rate-card.n   .rate-label{color:#64748B}
+.rate-input{
+  width:100%;padding:8px 6px;border:2px solid transparent;
+  border-radius:var(--r8);text-align:center;
+  font-size:1.35rem;font-weight:800;
+  background:rgba(255,255,255,.75);outline:none;
+  transition:border-color .2s;font-family:inherit;
+}
+.rate-card.ssr .rate-input:focus{border-color:#FBBF24}
+.rate-card.sr  .rate-input:focus{border-color:#C084FC}
+.rate-card.r   .rate-input:focus{border-color:#60A5FA}
+.rate-card.n   .rate-input:focus{border-color:#94A3B8}
+.rate-unit{font-size:.68rem;font-weight:700;color:var(--tx3);margin-top:3px}
+/* total bar */
+.rate-total{
+  padding:11px 16px;border-radius:var(--r8);
+  font-weight:700;font-size:.88rem;
+  text-align:center;margin-top:14px;
+  transition:background .3s,color .3s,border-color .3s;
+}
+.rate-total.valid  {background:#F0FDF4;color:#16A34A;border:2px solid #86EFAC}
+.rate-total.invalid{background:#FFF1F2;color:#DC2626;border:2px solid #FCA5A5}
 
-    /* ── RARITY BADGES ── */
-    .badge {
-      display:inline-block; padding:2px 8px; border-radius:100px;
-      font-size:.68rem; font-weight:700; letter-spacing:.04em;
-    }
-    .badge.SSR { background:#fef3c7; color:#92400e; }
-    .badge.SR  { background:#ede9fe; color:#5b21b6; }
-    .badge.R   { background:#dbeafe; color:#1e40af; }
-    .badge.N   { background:#f3f4f6; color:#374151; }
+/* =============================================================
+   BADGES / PILLS
+============================================================= */
+.badge{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:3px 10px;border-radius:var(--rpill);
+  font-size:.72rem;font-weight:800;letter-spacing:.3px;
+}
+.badge-ssr{background:#FEF3C7;color:#D97706;border:1.5px solid #FDE68A}
+.badge-sr {background:#F3E8FF;color:#9333EA;border:1.5px solid #E9D5FF}
+.badge-r  {background:#EFF6FF;color:#2563EB;border:1.5px solid #BFDBFE}
+.badge-n  {background:#F8FAFC;color:#64748B;border:1.5px solid #E2E8F0}
 
-    /* ── TABLE ── */
-    .tbl { width:100%; border-collapse:collapse; font-size:.855rem; }
-    .tbl th {
-      text-align:left; padding:.58rem .9rem;
-      background:var(--rose-light); font-size:.72rem;
-      font-weight:700; text-transform:uppercase; letter-spacing:.05em;
-      color:var(--near-black);
-    }
-    .tbl th:first-child { border-radius:7px 0 0 7px; }
-    .tbl th:last-child  { border-radius:0 7px 7px 0; }
-    .tbl td { padding:.58rem .9rem; border-bottom:1px solid var(--border); vertical-align:middle; }
-    .tbl tr:last-child td { border-bottom:none; }
-    .tbl tr:hover td { background:#fdf0f0; }
+/* =============================================================
+   TABLE
+============================================================= */
+.table-wrap{overflow-x:auto;border-radius:var(--r8);border:1px solid var(--bdr)}
+table.data-table{
+  width:100%;border-collapse:collapse;
+  font-size:.85rem;min-width:380px;
+}
+table.data-table th{
+  background:#F8FAFC;padding:10px 14px;text-align:left;
+  font-weight:700;color:var(--tx3);font-size:.71rem;
+  text-transform:uppercase;letter-spacing:.5px;
+  border-bottom:2px solid var(--bdr);
+}
+table.data-table td{
+  padding:10px 14px;border-bottom:1px solid var(--bdr);
+  color:var(--tx2);vertical-align:middle;
+}
+table.data-table tr:last-child td{border-bottom:none}
+table.data-table tbody tr:hover td{background:#FAFBFF}
 
-    /* ── TOGGLE SWITCH ── */
-    .toggle-row {
-      display:flex; align-items:center; justify-content:space-between;
-      padding:.7rem 1rem; background:var(--rose-light);
-      border-radius:9px; margin-bottom:.7rem;
-    }
-    .toggle-title { font-size:.855rem; font-weight:600; }
-    .toggle-desc  { font-size:.7rem; color:var(--muted); margin-top:2px; }
-    .sw { position:relative; width:44px; height:24px; flex-shrink:0; }
-    .sw input { opacity:0; width:0; height:0; }
-    .sw-track {
-      position:absolute; inset:0;
-      background:#ccc; border-radius:100px;
-      cursor:pointer; transition:.25s;
-    }
-    .sw-track::before {
-      content:''; position:absolute;
-      width:18px; height:18px; left:3px; top:3px;
-      background:#fff; border-radius:50%; transition:.25s;
-    }
-    .sw input:checked ~ .sw-track { background:var(--rouge); }
-    .sw input:checked ~ .sw-track::before { transform:translateX(20px); }
-    .sub-inputs { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-bottom:.75rem; }
-    .sub-inputs.hidden { display:none; }
+/* =============================================================
+   STAT CARDS
+============================================================= */
+.stat-card{
+  background:#fff;border:1px solid var(--bdr);
+  border-radius:var(--r12);padding:18px 14px;
+  text-align:center;box-shadow:var(--sh1);
+  transition:box-shadow .2s,transform .2s;
+}
+.stat-card:hover{box-shadow:var(--sh2);transform:translateY(-2px)}
+.stat-value{
+  font-size:1.9rem;font-weight:900;line-height:1.1;
+  background:var(--grad-btn);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.stat-value.gold {background:var(--grad-gold); -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.stat-value.green{background:var(--grad-green);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.stat-value.red  {background:var(--grad-red);  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.stat-value.slate{background:var(--grad-slate);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.stat-label{font-size:.73rem;color:var(--tx3);font-weight:600;margin-top:5px}
 
-    /* ── BAR CHART ── */
-    .bar-chart { display:flex; flex-direction:column; gap:.6rem; }
-    .bar-row { display:flex; align-items:center; gap:.65rem; }
-    .bar-lbl { width:36px; font-size:.73rem; font-weight:700; text-align:right; }
-    .bar-track { flex:1; height:18px; background:var(--rose-light); border-radius:100px; overflow:hidden; }
-    .bar-fill { height:100%; border-radius:100px; transition:width .5s ease; min-width:2px; }
-    .bar-fill.SSR { background:var(--ssr); }
-    .bar-fill.SR  { background:var(--sr); }
-    .bar-fill.R   { background:var(--r); }
-    .bar-fill.N   { background:var(--n); }
-    .bar-fill.rouge { background:var(--rouge); }
-    .bar-pct { width:58px; font-size:.72rem; color:var(--muted); }
+/* =============================================================
+   TOGGLE SWITCH
+============================================================= */
+.toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.toggle-row .toggle-label{font-weight:600;font-size:.875rem;color:var(--tx2)}
+.toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-track{
+  position:absolute;cursor:pointer;inset:0;
+  background:#CBD5E1;border-radius:24px;
+  transition:.25s;
+}
+.toggle-track::before{
+  content:'';position:absolute;width:18px;height:18px;
+  left:3px;bottom:3px;background:#fff;border-radius:50%;
+  transition:.25s;box-shadow:0 1px 4px rgba(0,0,0,.18);
+}
+.toggle-switch input:checked+.toggle-track{background:#F472B6}
+.toggle-switch input:checked+.toggle-track::before{transform:translateX(20px)}
 
-    /* ── RESULT STAT CARDS ── */
-    .stat-card {
-      text-align:center; padding:.95rem .75rem;
-      background:var(--rose-light); border-radius:10px;
-      border:1.5px solid var(--border);
-    }
-    .stat-val { font-size:1.75rem; font-weight:700; color:var(--rouge); line-height:1; }
-    .stat-lbl { font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:.3rem; }
+/* expandable sub-option block */
+.sub-opts{
+  background:#FAF5FF;border:1.5px solid #E9D5FF;
+  border-radius:var(--r8);padding:13px 15px;
+  gap:9px;align-items:center;flex-wrap:wrap;
+  display:none;margin-top:6px;
+}
+.sub-opts.open{display:flex}
+.sub-opts span{font-size:.82rem;font-weight:600;color:#7C3AED;white-space:nowrap}
+.sub-opts .form-input{width:84px;margin:0;padding:7px 10px}
 
-    /* ── ITEM CHIPS ── */
-    .chips { display:flex; flex-wrap:wrap; gap:.4rem; }
-    .chip {
-      display:flex; align-items:center; gap:.35rem;
-      padding:.28rem .7rem; border-radius:100px;
-      font-size:.76rem; font-weight:500;
-    }
-    .chip.SSR { background:#fef3c7; color:#92400e; border:1px solid #fbbf24; }
-    .chip.SR  { background:#ede9fe; color:#5b21b6; border:1px solid #a78bfa; }
-    .chip.R   { background:#dbeafe; color:#1e40af; border:1px solid #60a5fa; }
-    .chip.N   { background:#f3f4f6; color:#374151; border:1px solid #d1d5db; }
-    .chip-cnt { background:rgba(0,0,0,.12); padding:0 5px; border-radius:100px; font-size:.62rem; }
+/* =============================================================
+   HISTORY FEED
+============================================================= */
+.hist-feed{
+  display:flex;flex-direction:column;gap:8px;
+  max-height:500px;overflow-y:auto;padding-right:3px;
+}
+.hist-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:var(--r8);
+  border:1.5px solid var(--bdr);font-size:.855rem;
+  animation:slideDown .25s ease;
+}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.hist-item.ssr{background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border-color:#FDE68A}
+.hist-item.sr {background:linear-gradient(135deg,#FAF5FF,#F3E8FF);border-color:#E9D5FF}
+.hist-item.r  {background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border-color:#BFDBFE}
+.hist-item.n  {background:#F8FAFC;border-color:#E2E8F0}
+.hist-roll{font-size:.7rem;color:var(--tx4);min-width:52px}
+.hist-name{flex:1;font-weight:600}
+.hist-cost{font-size:.77rem;font-weight:700;color:var(--tx3)}
 
-    /* ── PITY BAR ── */
-    .pity-wrap { margin-top:.5rem; }
-    .pity-track { height:7px; background:var(--rose-light); border-radius:100px; overflow:hidden; margin-top:.25rem; }
-    .pity-fill { height:100%; border-radius:100px; background:linear-gradient(90deg,var(--rouge),var(--ssr)); transition:width .35s ease; }
+/* =============================================================
+   INSIGHT BOX
+============================================================= */
+.insight-box{
+  background:linear-gradient(135deg,#FAF5FF,#EFF6FF);
+  border:2px solid #E9D5FF;border-radius:var(--r12);
+  padding:18px 20px;font-size:.9rem;
+  line-height:1.9;color:var(--tx2);
+}
+.insight-box p{margin-bottom:8px}
+.insight-box p:last-child{margin-bottom:0}
+.insight-box strong{color:#7C3AED}
 
-    /* ── MC STATS ── */
-    .mc-card {
-      text-align:center; padding:.95rem .65rem;
-      background:var(--rose-light); border-radius:10px;
-    }
-    .mc-val { font-size:1.55rem; font-weight:700; color:var(--rouge); line-height:1; }
-    .mc-val.big { font-size:1.9rem; }
-    .mc-lbl { font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-top:.3rem; }
+/* =============================================================
+   CHART WRAPPER
+============================================================= */
+.chart-box{position:relative;height:270px}
 
-    /* ── INSIGHT BOX ── */
-    .insight {
-      background:var(--near-black); color:#fff;
-      border-radius:10px; padding:1.1rem 1.4rem; margin-top:1rem;
-    }
-    .insight h4 { font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--rose-pink); margin-bottom:.5rem; }
-    .insight p  { font-size:.9rem; line-height:1.65; color:#eee; }
+/* =============================================================
+   ITEM RESULT ROWS
+============================================================= */
+.item-result-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:9px 14px;border-radius:var(--r8);
+  border:1.5px solid var(--bdr);font-size:.855rem;
+  transition:box-shadow .15s;
+}
+.item-result-row:hover{box-shadow:var(--sh1)}
+.item-result-row.ssr{background:#FFFBEB;border-color:#FDE68A}
+.item-result-row.sr {background:#FAF5FF;border-color:#E9D5FF}
+.item-result-row.r  {background:#EFF6FF;border-color:#BFDBFE}
+.item-result-row.n  {background:#F8FAFC}
+.irr-name{font-weight:600}
+.irr-cnt{font-size:1.1rem;font-weight:900}
+.irr-cnt.ssr{color:#D97706}
+.irr-cnt.sr {color:#9333EA}
+.irr-cnt.r  {color:#2563EB}
+.irr-cnt.n  {color:#64748B}
+.irr-cnt.zero{color:#CBD5E1}
 
-    /* ── HISTORY ── */
-    .hist-list { display:flex; flex-direction:column; gap:.5rem; }
-    .hist-item {
-      display:flex; align-items:center; gap:.85rem;
-      padding:.7rem 1rem; background:var(--rose-light);
-      border-radius:9px; font-size:.845rem;
-    }
-    .hist-num {
-      width:24px; height:24px; border-radius:50%;
-      background:var(--rouge); color:#fff; flex-shrink:0;
-      display:flex; align-items:center; justify-content:center;
-      font-size:.68rem; font-weight:700;
-    }
-    .hist-meta { flex:1; }
-    .hist-type { font-weight:600; }
-    .hist-detail { font-size:.73rem; color:var(--muted); margin-top:2px; }
-    .hist-cost { font-weight:700; color:var(--rouge); }
-    .hist-time { font-size:.68rem; color:var(--muted); }
+/* =============================================================
+   SECTION SUB-HEADING
+============================================================= */
+.sec-head{
+  font-size:.72rem;font-weight:800;text-transform:uppercase;
+  letter-spacing:.55px;color:var(--tx3);
+  padding-bottom:7px;border-bottom:2px solid var(--bdr);
+  margin-bottom:11px;display:flex;align-items:center;gap:8px;
+}
+/* divider */
+.divider{height:1px;background:var(--bdr);margin:18px 0}
 
-    /* ── EMPTY STATE ── */
-    .empty {
-      display:flex; flex-direction:column; align-items:center;
-      justify-content:center; padding:2.5rem 1rem;
-      color:var(--muted); text-align:center;
-    }
-    .empty-icon { font-size:2.2rem; margin-bottom:.65rem; }
-    .empty-text { font-size:.845rem; line-height:1.5; }
+/* =============================================================
+   DIFF COLORS
+============================================================= */
+.diff-good{color:#16A34A;font-weight:700}
+.diff-warn{color:#D97706;font-weight:700}
+.diff-bad {color:#DC2626;font-weight:700}
 
-    /* ── ALERT / VALIDATION ── */
-    .alert { padding:.55rem .95rem; border-radius:8px; font-size:.83rem; margin-top:.5rem; }
-    .alert.err  { background:#fee2e2; color:#dc2626; border-left:3px solid #dc2626; }
-    .alert.ok   { background:#dcfce7; color:#166534; border-left:3px solid #16a34a; }
-    .alert.warn { background:#fef9c3; color:#854d0e; border-left:3px solid #ca8a04; }
-    .alert.info { background:#dbeafe; color:#1e40af; border-left:3px solid #3b82f6; }
+/* =============================================================
+   ALERT / INLINE ERROR
+============================================================= */
+.inline-err{
+  padding:10px 14px;border-radius:var(--r8);
+  font-size:.84rem;margin:10px 0;display:none;
+  background:#FFF1F2;border:1.5px solid #FECACA;color:#991B1B;
+}
+.inline-err.show{display:block}
 
-    /* ── SECTION SPACING ── */
-    .mt-1 { margin-top:.5rem; }
-    .mt-2 { margin-top:1rem; }
-    .mt-3 { margin-top:1.5rem; }
-    .section-head {
-      font-size:.72rem; font-weight:700; color:var(--muted);
-      text-transform:uppercase; letter-spacing:.06em; margin-bottom:.5rem;
-    }
-    .divider { height:1px; background:var(--border); margin:1.1rem 0; }
+/* =============================================================
+   PITY / FREE-ROLL PILL
+============================================================= */
+.info-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 11px;border-radius:var(--rpill);
+  font-size:.73rem;font-weight:700;
+}
+.pill-amber{background:#FFF7ED;border:1.5px solid #FDE68A;color:#92400E}
+.pill-green{background:#F0FDF4;border:1.5px solid #86EFAC;color:#14532D}
 
-    /* ── LOADING OVERLAY ── */
-    .overlay {
-      display:none; position:fixed; inset:0;
-      background:rgba(35,21,20,.55); z-index:999;
-      align-items:center; justify-content:center; flex-direction:column; gap:.9rem;
-    }
-    .overlay.show { display:flex; }
-    .spin {
-      width:46px; height:46px; border-radius:50%;
-      border:4px solid rgba(255,255,255,.25);
-      border-top-color:var(--rose-pink);
-      animation:rot .7s linear infinite;
-    }
-    @keyframes rot { to { transform:rotate(360deg); } }
-    .overlay-txt { color:#fff; font-size:.88rem; }
+/* =============================================================
+   EMPTY STATE
+============================================================= */
+.empty-state{
+  text-align:center;padding:42px 16px;color:var(--tx4);
+}
+.empty-state .emo{font-size:2.8rem;margin-bottom:10px}
+.empty-state p{font-size:.875rem;line-height:1.65}
 
-    /* ── RESPONSIVE ── */
-    @media(max-width:900px) {
-      .grid-2 { grid-template-columns:1fr; }
-      .grid-4 { grid-template-columns:1fr 1fr; }
-      .grid-9 { grid-template-columns:1fr 1fr; }
-    }
-    @media(max-width:640px) {
-      .main { padding:1rem 1rem 2.5rem; }
-      .nav-tabs { display:none; }
-      .mobile-nav { display:flex; }
-      .grid-3, .grid-4 { grid-template-columns:1fr 1fr; }
-      .card-head { padding:1rem 1.1rem .85rem; }
-      .card-body { padding:1rem 1.1rem; }
-      .card-foot { padding:.7rem 1.1rem; }
-    }
-    @media(max-width:400px) {
-      .grid-3, .grid-4, .grid-9 { grid-template-columns:1fr; }
-    }
+/* =============================================================
+   LOADING SPINNER (for MC)
+============================================================= */
+.spinner{
+  display:inline-block;width:18px;height:18px;
+  border:3px solid rgba(255,255,255,.4);
+  border-top-color:#fff;border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-    /* ── POOL SUMMARY PILLS ── */
-    .pool-pills { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.85rem; }
-    .pool-pill {
-      display:flex; align-items:center; gap:.35rem;
-      padding:.28rem .75rem; background:var(--rose-light);
-      border-radius:100px; font-size:.76rem;
-    }
-
-    /* ── POV PREVIEW ── */
-    .pov-preview {
-      padding:.7rem 1rem; background:var(--rose-light);
-      border-radius:9px; font-size:.845rem;
-      display:flex; flex-wrap:wrap; gap:1.25rem;
-      margin-bottom:.85rem;
-    }
-    .pov-preview-val { font-weight:700; color:var(--rouge); }
-    .pov-preview-free { font-weight:700; color:#16a34a; }
-    .pov-preview-total { font-weight:700; color:var(--near-black); }
-
-    /* ── DIFF COLORS ── */
-    .diff-ok  { color:#16a34a; font-weight:600; }
-    .diff-warn{ color:#ca8a04; font-weight:600; }
-    .diff-bad { color:#dc2626; font-weight:600; }
-  </style>
+/* =============================================================
+   MONTE CARLO HISTORY
+============================================================= */
+.mc-hist-list{display:flex;flex-direction:column;gap:10px}
+.mc-hist-entry{
+  border-radius:var(--r12);border:1.5px solid var(--bdr);
+  background:#FAFBFF;overflow:hidden;
+  transition:box-shadow .2s;
+}
+.mc-hist-entry:hover{box-shadow:var(--sh2)}
+/* coloured left accent strip that cycles through brand colours */
+.mc-hist-entry:nth-child(1){border-left:4px solid #F472B6}
+.mc-hist-entry:nth-child(2){border-left:4px solid #C084FC}
+.mc-hist-entry:nth-child(3){border-left:4px solid #60A5FA}
+.mc-hist-entry:nth-child(4){border-left:4px solid #34D399}
+.mc-hist-entry:nth-child(5){border-left:4px solid #FBBF24}
+.mc-hist-entry:nth-child(n+6){border-left:4px solid #F472B6}
+/* header row inside each history entry */
+.mch-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;gap:10px;flex-wrap:wrap;
+  background:linear-gradient(135deg,#F8F4FF,#EFF6FF);
+  border-bottom:1px solid var(--bdr);
+}
+.mch-run-no{
+  font-size:.7rem;font-weight:800;text-transform:uppercase;
+  letter-spacing:.6px;color:var(--tx4);white-space:nowrap;
+}
+.mch-config{
+  display:flex;gap:7px;flex-wrap:wrap;align-items:center;flex:1;
+}
+.mch-tag{
+  font-size:.72rem;font-weight:700;padding:2px 9px;
+  border-radius:var(--rpill);background:#fff;
+  border:1.5px solid var(--bdr);color:var(--tx3);
+}
+.mch-time{
+  font-size:.7rem;color:var(--tx4);white-space:nowrap;
+}
+/* stats row */
+.mch-stats{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:0;
+}
+@media(max-width:700px){.mch-stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:420px){.mch-stats{grid-template-columns:repeat(2,1fr)}}
+.mch-stat{
+  padding:10px 12px;text-align:center;
+  border-right:1px solid var(--bdr);
+}
+.mch-stat:last-child{border-right:none}
+.mch-stat-val{font-size:1.1rem;font-weight:900}
+.mch-stat-val.green{color:#10B981}
+.mch-stat-val.red  {color:#EF4444}
+.mch-stat-val.gold {color:#D97706}
+.mch-stat-val.blue {color:#2563EB}
+.mch-stat-lbl{font-size:.66rem;color:var(--tx4);font-weight:600;margin-top:2px}
+</style>
 </head>
 <body>
 
-<!-- Loading Overlay -->
-<div class="overlay" id="overlay">
-  <div class="spin"></div>
-  <div class="overlay-txt" id="overlay-txt">Running simulation…</div>
-</div>
-
-<!-- Header -->
+<!-- ══════════════════════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════════════════════ -->
 <header class="app-header">
-  <div class="header-inner">
-    <div class="brand">
-      <div class="brand-gem">🎴</div>
-      <div>
-        <div class="brand-name">Gacha Drop Rate <span>Simulator</span></div>
-        <div class="brand-sub">Probability · Pity System · Monte Carlo Analysis</div>
-      </div>
-    </div>
-    <nav class="nav-tabs">
-      <button class="nav-tab active" data-tab="setup">⚙️ Setup</button>
-      <button class="nav-tab" data-tab="simulate">🎲 Simulate</button>
-      <button class="nav-tab" data-tab="player">👤 Player POV</button>
-      <button class="nav-tab" data-tab="history">📋 History</button>
-    </nav>
-  </div>
+  <h1>🐰 BunnyChuu Gacha Simulator</h1>
+  <p>ระบบจำลองการสุ่มไอเทม &mdash; BunnyChuu Edition ✨ &nbsp;|&nbsp; Developer &amp; Player Analysis Tool</p>
 </header>
 
-<!-- Mobile Nav -->
-<div class="mobile-nav">
-  <button class="active" data-tab="setup">⚙️ Setup</button>
-  <button data-tab="simulate">🎲 Simulate</button>
-  <button data-tab="player">👤 Player POV</button>
-  <button data-tab="history">📋 History</button>
-</div>
+<!-- ══════════════════════════════════════════════════════════
+     NAV TABS
+══════════════════════════════════════════════════════════ -->
+<nav class="nav-bar" id="navBar">
+  <button class="tab-btn active" data-panel="panel-settings"    onclick="switchPanel(this)">⚙️ ตั้งค่า</button>
+  <button class="tab-btn"        data-panel="panel-simulation"  onclick="switchPanel(this)">🎲 จำลองเดี่ยว</button>
+  <button class="tab-btn"        data-panel="panel-montecarlo"  onclick="switchPanel(this)">🎰 Monte Carlo</button>
+  <button class="tab-btn"        data-panel="panel-history"     onclick="switchPanel(this)">📜 ประวัติ</button>
+</nav>
 
-<main class="main">
+<!-- ══════════════════════════════════════════════════════════
+     PAGE WRAPPER
+══════════════════════════════════════════════════════════ -->
+<div class="page">
 
-  <!-- ══════════════════════════════════════════ TAB: SETUP ══ -->
-  <div id="tab-setup" class="tab-panel active">
-    <div class="grid-2">
+<!-- ════════════════════════════════
+     PANEL 1 : SETTINGS
+════════════════════════════════ -->
+<section id="panel-settings" class="panel active">
 
-      <!-- Rate Settings -->
-      <div class="card">
-        <div class="card-head">
-          <div class="card-icon">%</div>
-          <div>
-            <div class="card-title">Drop Rate Settings</div>
-            <div class="card-sub">Set rarity probabilities — must total exactly 100%</div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="rate-grid">
-            <div>
-              <div class="rate-row">
-                <span class="rdot SSR"></span>
-                <span style="font-size:.82rem;font-weight:700;color:#92400e;">SSR</span>
-                <span style="font-size:.68rem;color:var(--muted);margin-left:auto;">Ultra Rare</span>
-              </div>
-              <input class="form-input" type="number" id="rate-SSR" value="1" min="0" max="100" step="0.01">
-            </div>
-            <div>
-              <div class="rate-row">
-                <span class="rdot SR"></span>
-                <span style="font-size:.82rem;font-weight:700;color:#5b21b6;">SR</span>
-                <span style="font-size:.68rem;color:var(--muted);margin-left:auto;">Super Rare</span>
-              </div>
-              <input class="form-input" type="number" id="rate-SR" value="9" min="0" max="100" step="0.01">
-            </div>
-            <div>
-              <div class="rate-row">
-                <span class="rdot R"></span>
-                <span style="font-size:.82rem;font-weight:700;color:#1e40af;">R</span>
-                <span style="font-size:.68rem;color:var(--muted);margin-left:auto;">Rare</span>
-              </div>
-              <input class="form-input" type="number" id="rate-R" value="30" min="0" max="100" step="0.01">
-            </div>
-            <div>
-              <div class="rate-row">
-                <span class="rdot N"></span>
-                <span style="font-size:.82rem;font-weight:700;color:#374151;">N</span>
-                <span style="font-size:.68rem;color:var(--muted);margin-left:auto;">Normal</span>
-              </div>
-              <input class="form-input" type="number" id="rate-N" value="60" min="0" max="100" step="0.01">
-            </div>
-          </div>
+  <!-- Rate Settings Card -->
+  <div class="card">
+    <div class="card-title">⭐ ตั้งค่าอัตราการสุ่ม (%)</div>
 
-          <div id="rate-total-pill" class="rate-total-pill ok" style="margin-top:1rem;">
-            <span class="label">Total Rate</span>
-            <span class="val" id="rate-total-val">100.00%</span>
-          </div>
-
-          <div id="rate-msg"></div>
-
-          <div class="divider"></div>
-          <div class="section-head">Rate Distribution</div>
-          <div class="bar-chart" id="rate-dist-chart"></div>
-        </div>
-        <div class="card-foot">
-          <button class="btn btn-ghost btn-sm" onclick="resetRates()">↺ Reset Defaults</button>
-        </div>
+    <div class="rate-grid">
+      <!-- SSR -->
+      <div class="rate-card ssr">
+        <span class="rate-label">✨ SSR</span>
+        <input class="rate-input" type="number" id="rate-ssr" value="1"
+               min="0" max="100" step="0.01" oninput="onRateInput()">
+        <div class="rate-unit">เปอร์เซ็นต์</div>
       </div>
-
-      <!-- Item Pool -->
-      <div class="card">
-        <div class="card-head">
-          <div class="card-icon">🎁</div>
-          <div>
-            <div class="card-title">Item Pool</div>
-            <div class="card-sub">Manage characters &amp; items for each rarity tier</div>
-          </div>
-        </div>
-        <div class="card-body">
-          <!-- Add Item Form -->
-          <div style="display:grid;grid-template-columns:1fr auto auto;gap:.65rem;align-items:flex-end;margin-bottom:.85rem;">
-            <div>
-              <label class="form-label">Item / Character Name</label>
-              <input class="form-input" type="text" id="item-name" placeholder="e.g. Aria the Celestial…" maxlength="50"
-                onkeydown="if(event.key==='Enter')addItem()">
-            </div>
-            <div>
-              <label class="form-label">Rarity</label>
-              <select class="form-select" id="item-rarity" style="width:auto;">
-                <option value="SSR">⭐ SSR</option>
-                <option value="SR">✦ SR</option>
-                <option value="R" selected>◆ R</option>
-                <option value="N">◇ N</option>
-              </select>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="addItem()" style="padding:.58rem .85rem;">+ Add</button>
-          </div>
-
-          <div id="item-msg"></div>
-
-          <!-- Item Table -->
-          <div id="item-table-wrap" style="max-height:240px;overflow-y:auto;border-radius:8px;border:1px solid var(--border);">
-            <div class="empty" id="item-empty">
-              <div class="empty-icon">🎲</div>
-              <div class="empty-text">No items yet. Add items above, or load sample items.</div>
-            </div>
-            <table class="tbl" id="item-tbl" style="display:none;">
-              <thead>
-                <tr><th>#</th><th>Name</th><th>Rarity</th><th>Actions</th></tr>
-              </thead>
-              <tbody id="item-tbody"></tbody>
-            </table>
-          </div>
-
-          <!-- Pool summary -->
-          <div class="pool-pills" id="pool-pills"></div>
-        </div>
-        <div class="card-foot">
-          <button class="btn btn-ghost btn-sm" onclick="loadSampleItems()">Load Sample Items</button>
-          <button class="btn btn-danger btn-sm" onclick="clearItems()">🗑️ Clear All</button>
-        </div>
+      <!-- SR -->
+      <div class="rate-card sr">
+        <span class="rate-label">💜 SR</span>
+        <input class="rate-input" type="number" id="rate-sr" value="9"
+               min="0" max="100" step="0.01" oninput="onRateInput()">
+        <div class="rate-unit">เปอร์เซ็นต์</div>
       </div>
+      <!-- R -->
+      <div class="rate-card r">
+        <span class="rate-label">💙 R</span>
+        <input class="rate-input" type="number" id="rate-r" value="30"
+               min="0" max="100" step="0.01" oninput="onRateInput()">
+        <div class="rate-unit">เปอร์เซ็นต์</div>
+      </div>
+      <!-- N -->
+      <div class="rate-card n">
+        <span class="rate-label">🩶 N</span>
+        <input class="rate-input" type="number" id="rate-n" value="60"
+               min="0" max="100" step="0.01" oninput="onRateInput()">
+        <div class="rate-unit">เปอร์เซ็นต์</div>
+      </div>
+    </div>
+
+    <!-- Running total indicator + reset button -->
+    <div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap">
+      <div id="rateTotal" class="rate-total valid" style="flex:1;margin-top:0">✅ รวม: 100.00% — ถูกต้องแล้ว!</div>
+      <button class="btn btn-outline btn-sm" onclick="resetRates()" title="รีเซ็ตกลับค่าเริ่มต้น">
+        🔄 รีเซ็ต
+      </button>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════ TAB: SIMULATE ══ -->
-  <div id="tab-simulate" class="tab-panel">
-    <div class="grid-2">
+  <!-- Item Pool Card -->
+  <div class="card">
+    <div class="card-title">🎁 จัดการคลังไอเทม</div>
 
-      <!-- Config -->
-      <div class="card">
-        <div class="card-head">
-          <div class="card-icon">🎲</div>
-          <div>
-            <div class="card-title">Single Simulation</div>
-            <div class="card-sub">Set your pull session parameters</div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-bottom:1rem;">
-            <div>
-              <label class="form-label">Number of Rolls</label>
-              <input class="form-input" type="number" id="sim-rolls" value="100" min="1" max="100000">
-            </div>
-            <div>
-              <label class="form-label">Cost per Roll</label>
-              <input class="form-input" type="number" id="sim-price" value="30" min="0">
-            </div>
-          </div>
-
-          <!-- Pity Toggle -->
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-title">🛡️ Pity System</div>
-              <div class="toggle-desc">Guarantee SSR after N rolls without one</div>
-            </div>
-            <label class="sw">
-              <input type="checkbox" id="pity-on" onchange="toggleSub('pity-on','pity-sub')">
-              <span class="sw-track"></span>
-            </label>
-          </div>
-          <div class="sub-inputs hidden" id="pity-sub">
-            <div>
-              <label class="form-label">Pity Threshold (rolls)</label>
-              <input class="form-input" type="number" id="pity-thresh" value="90" min="1" max="9999">
-            </div>
-            <div id="pity-status-block">
-              <label class="form-label">Current Pity Counter</label>
-              <div style="padding:.58rem .85rem;background:var(--rose-light);border-radius:8px;font-size:.875rem;">
-                <span id="pity-counter-display" style="font-weight:700;color:var(--rouge);">0</span>
-                <span style="color:var(--muted);font-size:.78rem;"> / <span id="pity-thresh-display">90</span> rolls</span>
-                <div class="pity-wrap"><div class="pity-track"><div class="pity-fill" id="pity-fill" style="width:0%"></div></div></div>
-              </div>
-            </div>
-          </div>
-
-          <div id="sim-msg"></div>
-
-          <button class="btn btn-primary btn-full mt-2" id="sim-btn" onclick="runSim()">⚔️ Run Simulation</button>
-        </div>
-        <div class="card-foot">
-          <button class="btn btn-ghost btn-sm" id="export-pull-btn" disabled onclick="exportPullCSV()">📥 Export Pull CSV</button>
-          <button class="btn btn-danger btn-sm" onclick="resetSim()">↺ Reset</button>
-        </div>
+    <!-- Add-item form -->
+    <div class="g2" style="margin-bottom:12px">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">ชื่อไอเทม</label>
+        <input id="newItemName" class="form-input" type="text" placeholder="เช่น ดาบมังกรเงิน…">
       </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">ระดับความหายาก</label>
+        <select id="newItemRarity" class="form-select">
+          <option value="SSR">✨ SSR</option>
+          <option value="SR">💜 SR</option>
+          <option value="R">💙 R</option>
+          <option value="N" selected>🩶 N</option>
+        </select>
+      </div>
+    </div>
+    <div id="addItemErr" class="inline-err"></div>
+    <button class="btn btn-primary" onclick="addItem()" style="margin-bottom:18px">
+      ➕ เพิ่มไอเทม
+    </button>
 
-      <!-- Quick Results -->
-      <div class="card" id="sim-overview" style="display:none;">
-        <div class="card-head">
-          <div class="card-icon gold">📊</div>
-          <div>
-            <div class="card-title">Result Overview</div>
-            <div class="card-sub" id="sim-overview-sub">Session summary</div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="grid-4" id="sim-stat-cards" style="margin-bottom:1rem;"></div>
-          <div class="section-head">Actual vs Set Rates</div>
-          <div class="bar-chart" id="sim-bar-chart"></div>
-        </div>
+    <div class="divider"></div>
+
+    <!-- Item table (populated by JS) -->
+    <div id="itemTableWrap"></div>
+  </div>
+
+</section><!-- /panel-settings -->
+
+
+<!-- ════════════════════════════════
+     PANEL 2 : SINGLE SIMULATION
+════════════════════════════════ -->
+<section id="panel-simulation" class="panel">
+
+  <!-- Inputs Card -->
+  <div class="card">
+    <div class="card-title">🎯 ตั้งค่าการจำลอง (Developer / System POV)</div>
+
+    <div class="g2">
+      <div class="form-group">
+        <label class="form-label">จำนวนการสุ่ม (ครั้ง)</label>
+        <input id="simRolls" class="form-input" type="number"
+               value="100" min="1" placeholder="เช่น 100">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ค่าใช้จ่ายต่อครั้ง (บาท)</label>
+        <input id="simCost" class="form-input" type="number"
+               value="30" min="0" step="0.01" placeholder="เช่น 30">
       </div>
     </div>
 
-    <!-- Full Results -->
-    <div id="sim-full" style="display:none;margin-top:1.5rem;">
-      <div class="grid-2">
-        <!-- Rate comparison table -->
-        <div class="card">
-          <div class="card-head">
-            <div class="card-icon blue">📈</div>
-            <div>
-              <div class="card-title">Rate Comparison</div>
-              <div class="card-sub">Configured rate vs actual result</div>
-            </div>
-          </div>
-          <div class="card-body" style="padding:0;">
-            <table class="tbl" id="rate-cmp-tbl">
-              <thead>
-                <tr><th>Rarity</th><th>Set Rate</th><th>Count</th><th>Actual %</th><th>Δ</th></tr>
-              </thead>
-              <tbody id="rate-cmp-body"></tbody>
-            </table>
-          </div>
-        </div>
-        <!-- Items obtained -->
-        <div class="card">
-          <div class="card-head">
-            <div class="card-icon purple">🎁</div>
-            <div>
-              <div class="card-title">Items Obtained</div>
-              <div class="card-sub">Breakdown by rarity tier</div>
-            </div>
-          </div>
-          <div class="card-body" id="items-obtained" style="max-height:320px;overflow-y:auto;"></div>
-        </div>
-      </div>
+    <!-- Pity toggle -->
+    <div class="toggle-row">
+      <label class="toggle-switch">
+        <input type="checkbox" id="simPityToggle"
+               onchange="toggleSubOpts('simPityOpts',this)">
+        <span class="toggle-track"></span>
+      </label>
+      <span class="toggle-label">เปิดระบบ Pity</span>
+    </div>
+    <div class="sub-opts" id="simPityOpts">
+      <span>ถ้าไม่ได้ SSR ครบ</span>
+      <input id="simPityAt" class="form-input" type="number" value="80" min="1">
+      <span>ครั้ง → roll ถัดไปการันตี SSR</span>
+    </div>
+
+    <div id="simErr" class="inline-err"></div>
+
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn btn-primary" id="simRunBtn" onclick="runSingleSim()">🚀 เริ่มการจำลอง</button>
+      <button class="btn btn-outline"  id="exportPullBtn"  onclick="exportPullCSV()"   style="display:none">📥 Export Pull CSV</button>
+      <button class="btn btn-outline"  id="exportSummBtn"  onclick="exportSummaryCSV()" style="display:none">📊 Export Summary CSV</button>
     </div>
   </div>
 
-  <!-- ════════════════════════════════════ TAB: PLAYER POV ══ -->
-  <div id="tab-player" class="tab-panel">
-    <div class="grid-2">
+  <!-- ─── Results (hidden until first run) ─── -->
+  <div id="simResults" style="display:none">
 
-      <!-- Config -->
-      <div class="card">
-        <div class="card-head">
-          <div class="card-icon">👤</div>
-          <div>
-            <div class="card-title">Player POV Simulator</div>
-            <div class="card-sub">Monte Carlo analysis from a real player's perspective</div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="grid-3" style="margin-bottom:1rem;">
-            <div>
-              <label class="form-label">Total Budget</label>
-              <input class="form-input" type="number" id="pov-budget" value="3000" min="0" oninput="updatePOVPreview()">
-            </div>
-            <div>
-              <label class="form-label">Price per Roll</label>
-              <input class="form-input" type="number" id="pov-price" value="30" min="1" oninput="updatePOVPreview()">
-            </div>
-            <div>
-              <label class="form-label">Simulations</label>
-              <input class="form-input" type="number" id="pov-sims" value="1000" min="100" max="10000">
-            </div>
-          </div>
-
-          <!-- Free Roll Toggle -->
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-title">🎁 Free Roll Rule</div>
-              <div class="toggle-desc">Earn bonus rolls after paid roll milestones</div>
-            </div>
-            <label class="sw">
-              <input type="checkbox" id="free-on" onchange="toggleSub('free-on','free-sub');updatePOVPreview()">
-              <span class="sw-track"></span>
-            </label>
-          </div>
-          <div class="sub-inputs hidden" id="free-sub">
-            <div>
-              <label class="form-label">Every X Paid Rolls</label>
-              <input class="form-input" type="number" id="free-every" value="10" min="1" oninput="updatePOVPreview()">
-            </div>
-            <div>
-              <label class="form-label">Free Rolls Granted</label>
-              <input class="form-input" type="number" id="free-grant" value="1" min="1" oninput="updatePOVPreview()">
-            </div>
-          </div>
-
-          <!-- POV Pity Toggle -->
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-title">🛡️ Include Pity System</div>
-              <div class="toggle-desc">Apply pity threshold from Simulation tab</div>
-            </div>
-            <label class="sw">
-              <input type="checkbox" id="pov-pity-on">
-              <span class="sw-track"></span>
-            </label>
-          </div>
-
-          <!-- Roll Preview -->
-          <div class="pov-preview" id="pov-preview">
-            <div><span class="pov-preview-val" id="prev-paid">100</span> <span style="color:var(--muted);">paid rolls</span></div>
-            <div><span class="pov-preview-total" id="prev-total">100</span> <span style="color:var(--muted);">total rolls</span></div>
-          </div>
-
-          <div id="pov-msg"></div>
-          <button class="btn btn-primary btn-full" onclick="runPOV()">🚀 Run Monte Carlo</button>
-        </div>
-        <div class="card-foot">
-          <button class="btn btn-ghost btn-sm" id="export-pov-btn" disabled onclick="exportPOVCSV()">📥 Export POV CSV</button>
-        </div>
-      </div>
-
-      <!-- POV Results -->
-      <div class="card" id="pov-results" style="display:none;">
-        <div class="card-head">
-          <div class="card-icon gold">📊</div>
-          <div>
-            <div class="card-title">Monte Carlo Results</div>
-            <div class="card-sub" id="pov-result-sub">–</div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="grid-9" id="mc-stats" style="margin-bottom:1rem;"></div>
-          <div class="section-head">SSR Count Distribution</div>
-          <div class="bar-chart" id="ssr-dist-chart"></div>
-          <div class="insight" id="pov-insight">
-            <h4>💡 Insight</h4>
-            <p id="insight-txt"></p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════ TAB: HISTORY ══ -->
-  <div id="tab-history" class="tab-panel">
+    <!-- Summary stat cards -->
     <div class="card">
-      <div class="card-head">
-        <div class="card-icon">📋</div>
-        <div>
-          <div class="card-title">Simulation History</div>
-          <div class="card-sub">Last 10 sessions — both Single &amp; Player POV</div>
+      <div class="card-title">📊 สรุปผลการจำลอง</div>
+      <div class="g4">
+        <div class="stat-card">
+          <div class="stat-value"      id="res-total-rolls">—</div>
+          <div class="stat-label">จำนวนสุ่มทั้งหมด</div>
         </div>
-        <button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="clearHistory()">Clear History</button>
+        <div class="stat-card">
+          <div class="stat-value"      id="res-total-cost">—</div>
+          <div class="stat-label">ค่าใช้จ่ายรวม (฿)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value gold" id="res-ssr-count">—</div>
+          <div class="stat-label">✨ SSR ที่ได้</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value"      id="res-top-rarity">—</div>
+          <div class="stat-label">ระดับที่ได้บ่อยที่สุด</div>
+        </div>
       </div>
-      <div class="card-body" id="history-body">
-        <div class="empty">
-          <div class="empty-icon">📋</div>
-          <div class="empty-text">No history yet.<br>Run a simulation to see it recorded here.</div>
+      <div id="pityFiredNote" style="text-align:center;margin-top:12px;display:none"></div>
+    </div>
+
+    <!-- Stats table + chart side-by-side -->
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">📈 ตั้งค่า vs ผลจริง</div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ระดับ</th>
+                <th>ตั้งค่า (%)</th>
+                <th>จำนวน</th>
+                <th>จริง (%)</th>
+                <th>ผลต่าง</th>
+              </tr>
+            </thead>
+            <tbody id="statsTableBody"></tbody>
+          </table>
         </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📊 กราฟเปรียบเทียบ</div>
+        <div class="chart-box"><canvas id="rarityChart"></canvas></div>
       </div>
     </div>
+
+    <!-- Per-item result grid -->
+    <div class="card">
+      <div class="card-title">🎁 ผลไอเทมแยกตามระดับ</div>
+      <div id="itemResultsWrap"></div>
+    </div>
+
+  </div><!-- /simResults -->
+
+</section><!-- /panel-simulation -->
+
+
+<!-- ════════════════════════════════
+     PANEL 3 : MONTE CARLO
+════════════════════════════════ -->
+<section id="panel-montecarlo" class="panel">
+
+  <div class="card">
+    <div class="card-title">🎰 Advanced Player POV Simulator (Monte Carlo)</div>
+
+    <div class="g3">
+      <div class="form-group">
+        <label class="form-label">งบประมาณทั้งหมด (บาท)</label>
+        <input id="mcBudget" class="form-input" type="number" value="3000" min="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ค่าใช้จ่ายต่อครั้ง (บาท)</label>
+        <input id="mcCostPer" class="form-input" type="number" value="30" min="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">จำนวนผู้เล่นจำลอง (iterations)</label>
+        <input id="mcSims" class="form-input" type="number"
+               value="1000" min="10" max="100000">
+      </div>
+    </div>
+
+    <!-- Free Roll toggle -->
+    <div class="toggle-row">
+      <label class="toggle-switch">
+        <input type="checkbox" id="mcFreeRollToggle"
+               onchange="toggleSubOpts('mcFreeRollOpts',this)">
+        <span class="toggle-track"></span>
+      </label>
+      <span class="toggle-label">เปิดระบบ Free Roll</span>
+    </div>
+    <div class="sub-opts" id="mcFreeRollOpts">
+      <span>ทุก</span>
+      <input id="mcFreeEvery"  class="form-input" type="number" value="10" min="1">
+      <span>ครั้งที่จ่าย จะได้ฟรีอีก</span>
+      <input id="mcFreeAmount" class="form-input" type="number" value="1"  min="1">
+      <span>ครั้ง <span style="opacity:.55">(ไม่ลูกโซ่)</span></span>
+    </div>
+
+    <!-- Pity toggle MC -->
+    <div class="toggle-row" style="margin-top:10px">
+      <label class="toggle-switch">
+        <input type="checkbox" id="mcPityToggle"
+               onchange="toggleSubOpts('mcPityOpts',this)">
+        <span class="toggle-track"></span>
+      </label>
+      <span class="toggle-label">เปิดระบบ Pity</span>
+    </div>
+    <div class="sub-opts" id="mcPityOpts">
+      <span>ถ้าไม่ได้ SSR ครบ</span>
+      <input id="mcPityAt" class="form-input" type="number" value="80" min="1">
+      <span>ครั้ง → roll ถัดไปการันตี SSR</span>
+    </div>
+
+    <div id="mcErr" class="inline-err"></div>
+    <button class="btn btn-primary" id="mcRunBtn"
+            onclick="runMonteCarlo()" style="margin-top:14px">
+      🚀 เริ่ม Monte Carlo Simulation
+    </button>
   </div>
 
-</main>
+  <!-- MC Results -->
+  <div id="mcResults" style="display:none">
 
+    <div class="card">
+      <div class="card-title">📊 ผลลัพธ์ Monte Carlo</div>
+      <div class="g4">
+        <div class="stat-card">
+          <div class="stat-value green" id="mc-chance-ssr">—</div>
+          <div class="stat-label">โอกาสได้ SSR ≥ 1 ชิ้น</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value red"   id="mc-salt-rate">—</div>
+          <div class="stat-label">😢 Salt Rate (0 SSR)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value"       id="mc-avg-ssr">—</div>
+          <div class="stat-label">SSR เฉลี่ย / ผู้เล่น</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value"       id="mc-avg-rolls">—</div>
+          <div class="stat-label">Roll เฉลี่ย (paid+free)</div>
+        </div>
+      </div>
+      <div class="g2" style="margin-top:14px">
+        <div class="stat-card">
+          <div class="stat-value gold"  id="mc-best-ssr">—</div>
+          <div class="stat-label">🏆 Best Case SSR</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value slate" id="mc-worst-ssr">—</div>
+          <div class="stat-label">😭 Worst Case SSR</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thai-language insight -->
+    <div class="card">
+      <div class="card-title">💡 สรุปข้อมูล (ภาษาไทย)</div>
+      <div class="insight-box" id="mcInsight"></div>
+    </div>
+
+    <!-- SSR distribution chart -->
+    <div class="card">
+      <div class="card-title">📊 การกระจาย SSR ในกลุ่มผู้เล่นจำลอง</div>
+      <div class="chart-box"><canvas id="mcChart"></canvas></div>
+    </div>
+
+    <!-- Export MC -->
+    <div class="card">
+      <div class="card-title">📥 Export ข้อมูล Monte Carlo</div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="exportMCCSV()">
+          📊 Export Player POV Summary CSV
+        </button>
+      </div>
+    </div>
+
+    <!-- MC Run History -->
+    <div class="card" id="mcHistCard" style="display:none">
+      <div class="card-title" style="justify-content:space-between">
+        <span>🗂️ ประวัติการรัน Monte Carlo</span>
+        <button class="btn btn-danger btn-sm" onclick="clearMCHistory()"
+                style="margin-left:auto;flex-shrink:0">🗑️ ล้างประวัติ</button>
+      </div>
+      <div id="mcHistList" class="mc-hist-list"></div>
+    </div>
+
+  </div><!-- /mcResults -->
+
+</section><!-- /panel-montecarlo -->
+
+
+<!-- ════════════════════════════════
+     PANEL 4 : HISTORY
+════════════════════════════════ -->
+<section id="panel-history" class="panel">
+  <div class="card">
+    <div class="card-title">📜 ประวัติ 20 ครั้งล่าสุด</div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+      <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ ล้างประวัติ</button>
+    </div>
+    <div id="histFeed" class="hist-feed"></div>
+  </div>
+</section><!-- /panel-history -->
+
+</div><!-- /page -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════ -->
 <script>
-/* ══════════════════════════════════════════════════════════════
-   STATE
-══════════════════════════════════════════════════════════════ */
-const RARITIES = ['SSR','SR','R','N'];
-let items = [];
-let nxtId = 1;
-let lastPull = null;
-let lastPOV  = null;
-let simHistory = [];
+/* ─────────────────────────────────────────────────────────────
+   CONSTANTS & INITIAL ITEM POOL DATA
+───────────────────────────────────────────────────────────── */
+// Rarity ordering used throughout the app
+const RARITIES   = ['SSR', 'SR', 'R', 'N'];
+// Display emoji for each rarity
+const RARITY_EMO = { SSR:'✨', SR:'💜', R:'💙', N:'🩶' };
 
-/* ══════════════════════════════════════════════════════════════
-   NAVIGATION
-══════════════════════════════════════════════════════════════ */
-document.querySelectorAll('[data-tab]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const tab = btn.dataset.tab;
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-    document.querySelectorAll('[data-tab="' + tab + '"]').forEach(b => b.classList.add('active'));
-    if (tab === 'player') updatePOVPreview();
-    if (tab === 'setup')  renderRateChart();
-  });
-});
+// ── Item pool — pre-populated with BunnyChuu default items ──
+let itemPool = [
+  { id:1,  name:'Bunny Queen ดาบจักรพรรดิต่าย', rarity:'SSR' },
+  { id:2,  name:'Chuu Staff คทาศักดิ์สิทธิ์',    rarity:'SSR' },
+  { id:3,  name:'กระเป๋าเป้กระต่ายชมพู',         rarity:'SR'  },
+  { id:4,  name:'หมวกไหมพรมหูกระต่าย',            rarity:'SR'  },
+  { id:5,  name:'ปืนฉีดน้ำลายแครอท',             rarity:'SR'  },
+  { id:6,  name:'โล่ไม้หัวใจ',                    rarity:'R'   },
+  { id:7,  name:'รองเท้าบูทวิ่งเร็ว',             rarity:'R'   },
+  { id:8,  name:'ถุงมือหนังกระต่าย',              rarity:'R'   },
+  { id:9,  name:'ยาฟื้นฟู HP',                    rarity:'N'   },
+  { id:10, name:'ยาฟื้นฟู MP',                    rarity:'N'   },
+  { id:11, name:'ก้อนหินนำโชค',                   rarity:'N'   },
+  { id:12, name:'แครอทธรรมดา',                     rarity:'N'   },
+];
+let _nextId = 13; // auto-increment counter for new items
 
-/* ══════════════════════════════════════════════════════════════
-   HELPERS
-══════════════════════════════════════════════════════════════ */
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function msg(id, text, type) {
-  document.getElementById(id).innerHTML = text ? `<div class="alert ${type}">${text}</div>` : '';
-}
-function rarityColor(r) {
-  return {SSR:'#f59e0b',SR:'#8b5cf6',R:'#3b82f6',N:'#6b7280'}[r]||'#888';
-}
-function rarityText(r) {
-  return {SSR:'#92400e',SR:'#5b21b6',R:'#1e40af',N:'#374151'}[r]||'#333';
-}
+/* ─────────────────────────────────────────────────────────────
+   APPLICATION STATE
+───────────────────────────────────────────────────────────── */
+let lastPullLog   = [];  // individual roll records [{roll,rarity,itemName,cost}]
+let lastSimCounts = {};  // rarity → count from most recent single sim
+let mcPlayerData  = [];  // per-player MC results [{totalRolls,SSR,SR,R,N}]
+let mcRunHistory  = [];  // history of completed MC runs (newest first, cap 10)
+let rollHistory   = [];  // up to 20 most recent rolls for History tab
 
-/* ══════════════════════════════════════════════════════════════
-   RATE SETTINGS
-══════════════════════════════════════════════════════════════ */
-function getRates() {
-  return Object.fromEntries(RARITIES.map(r => [r, parseFloat(document.getElementById('rate-'+r).value)||0]));
-}
+// Chart.js instances — destroyed and recreated on each run
+let chartInstance    = null;
+let chartMCInstance  = null;
 
-RARITIES.forEach(r => {
-  document.getElementById('rate-'+r).addEventListener('input', () => {
-    validateRates(); renderRateChart();
-  });
-});
+/* ─────────────────────────────────────────────────────────────
+   UTILITY HELPERS
+───────────────────────────────────────────────────────────── */
+/** Shorthand for document.getElementById */
+const $ = id => document.getElementById(id);
 
-function validateRates() {
-  const rates = getRates();
-  const total = Object.values(rates).reduce((a,b)=>a+b,0);
-  const pill   = document.getElementById('rate-total-pill');
-  const valEl  = document.getElementById('rate-total-val');
-  const isOk   = Math.abs(total-100) < 0.005;
+/** Format a number with locale thousands separators */
+const fmtNum = n => Number(n).toLocaleString('th-TH');
 
-  valEl.textContent = total.toFixed(2)+'%';
-  pill.className = 'rate-total-pill ' + (isOk ? 'ok' : 'bad');
-
-  let errText = '';
-  RARITIES.forEach(r => {
-    const el = document.getElementById('rate-'+r);
-    if (rates[r] < 0) { el.classList.add('err'); errText = `${r} rate cannot be negative.`; }
-    else el.classList.remove('err');
-  });
-  if (!isOk && !errText) {
-    const d = (total-100).toFixed(2);
-    errText = `Total is ${total.toFixed(2)}% (${d>0?'+':''}${d}%). Must equal exactly 100%.`;
-  }
-  msg('rate-msg', errText, 'err');
-  return isOk && !errText;
+/** Escape HTML to prevent injection from user-supplied item names */
+function escHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
-function renderRateChart() {
-  const rates = getRates();
-  document.getElementById('rate-dist-chart').innerHTML = RARITIES.map(r => `
-    <div class="bar-row">
-      <div class="bar-lbl" style="color:${rarityColor(r)};">${r}</div>
-      <div class="bar-track"><div class="bar-fill ${r}" style="width:${Math.min(rates[r],100)}%"></div></div>
-      <div class="bar-pct">${rates[r].toFixed(2)}%</div>
-    </div>`).join('');
-}
-
-function resetRates() {
-  ['SSR','SR','R','N'].forEach((r,i) => document.getElementById('rate-'+r).value = [1,9,30,60][i]);
-  validateRates(); renderRateChart();
-}
-
-/* ══════════════════════════════════════════════════════════════
-   ITEM POOL
-══════════════════════════════════════════════════════════════ */
-function addItem() {
-  const name   = document.getElementById('item-name').value.trim();
-  const rarity = document.getElementById('item-rarity').value;
-  if (!name) { msg('item-msg','Item name cannot be empty.','err'); return; }
-  items.push({ id: nxtId++, name, rarity });
-  document.getElementById('item-name').value = '';
-  msg('item-msg',`✅ Added <strong>${esc(name)}</strong> as ${rarity}.`,'ok');
-  renderItemTable(); renderPoolPills();
-}
-
-function deleteItem(id) {
-  items = items.filter(i=>i.id!==id);
-  renderItemTable(); renderPoolPills();
-}
-
-function editItem(id) {
-  const it = items.find(i=>i.id===id);
-  if (!it) return;
-  const n = prompt('Edit name:', it.name);
-  if (n !== null && n.trim()) { it.name = n.trim(); renderItemTable(); }
-}
-
-function renderItemTable() {
-  const tbl  = document.getElementById('item-tbl');
-  const empty= document.getElementById('item-empty');
-  const tbody= document.getElementById('item-tbody');
-  if (!items.length) { tbl.style.display='none'; empty.style.display='flex'; return; }
-  tbl.style.display='table'; empty.style.display='none';
-  tbody.innerHTML = items.map((it,i)=>`
-    <tr>
-      <td style="color:var(--muted);font-size:.78rem;">${i+1}</td>
-      <td><strong>${esc(it.name)}</strong></td>
-      <td><span class="badge ${it.rarity}">${it.rarity}</span></td>
-      <td>
-        <div style="display:flex;gap:.3rem;">
-          <button class="btn btn-ghost btn-sm" onclick="editItem(${it.id})">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteItem(${it.id})">🗑️</button>
-        </div>
-      </td>
-    </tr>`).join('');
-}
-
-function renderPoolPills() {
-  const cnt = {SSR:0,SR:0,R:0,N:0};
-  items.forEach(i=>cnt[i.rarity]++);
-  document.getElementById('pool-pills').innerHTML = RARITIES.map(r=>`
-    <div class="pool-pill">
-      <span class="rdot ${r}"></span>
-      <span style="font-weight:700;">${r}</span>
-      <span style="color:var(--muted);">${cnt[r]}</span>
-    </div>`).join('');
-}
-
-function loadSampleItems() {
-  const smp = [
-    {name:'Excalibur',rarity:'SSR'},{name:'Aria the Celestial',rarity:'SSR'},{name:'Dragon Emperor',rarity:'SSR'},
-    {name:'Holy Blade',rarity:'SR'},{name:'Shadow Rogue',rarity:'SR'},{name:'Crystal Mage',rarity:'SR'},{name:'Storm Knight',rarity:'SR'},
-    {name:'Iron Sword',rarity:'R'},{name:'Forest Archer',rarity:'R'},{name:'Stone Shield',rarity:'R'},{name:'Wind Staff',rarity:'R'},{name:'Fire Tome',rarity:'R'},
-    {name:'Wooden Sword',rarity:'N'},{name:'Leather Armor',rarity:'N'},{name:'Basic Potion',rarity:'N'},{name:'Apprentice Wand',rarity:'N'}
-  ];
-  smp.forEach(s=>items.push({id:nxtId++,...s}));
-  renderItemTable(); renderPoolPills();
-}
-
-function clearItems() {
-  if (!items.length) return;
-  if (!confirm('Clear all items?')) return;
-  items = [];
-  renderItemTable(); renderPoolPills();
-}
-
-/* ══════════════════════════════════════════════════════════════
-   VALIDATION FOR SIMULATION
-══════════════════════════════════════════════════════════════ */
-function canSimulate() {
-  const rates = getRates();
-  const total = Object.values(rates).reduce((a,b)=>a+b,0);
-  if (Math.abs(total-100)>0.005) return {ok:false,msg:`Rate total is ${total.toFixed(2)}%. Must equal 100% — fix in Setup tab.`};
-  for (const r of RARITIES) {
-    if (rates[r] < 0) return {ok:false,msg:`${r} rate is negative.`};
-    if (rates[r] > 0 && !items.some(i=>i.rarity===r))
-      return {ok:false,msg:`${r} has rate ${rates[r]}% but no items in pool. Add items or set rate to 0%.`};
-  }
-  return {ok:true};
-}
-
-/* ══════════════════════════════════════════════════════════════
-   ROLL ENGINE
-══════════════════════════════════════════════════════════════ */
-function rollOnce(rates, pityCount, pityOn, thresh) {
-  if (pityOn && pityCount >= thresh) {
-    const pool = items.filter(i=>i.rarity==='SSR');
-    const item = pool[Math.floor(Math.random()*pool.length)];
-    return {rarity:'SSR', item:item?item.name:'???', pity:true};
-  }
-  const rand = Math.random()*100;
-  let cum = 0, chosen = 'N';
-  for (const r of RARITIES) {
-    cum += rates[r];
-    if (rand < cum) { chosen=r; break; }
-  }
-  const pool = items.filter(i=>i.rarity===chosen);
-  const item = pool[Math.floor(Math.random()*pool.length)];
-  return {rarity:chosen, item:item?item.name:'???', pity:false};
-}
-
-/* ══════════════════════════════════════════════════════════════
-   SINGLE SIMULATION
-══════════════════════════════════════════════════════════════ */
-function runSim() {
-  const v = canSimulate();
-  if (!v.ok) { msg('sim-msg', v.msg, 'err'); return; }
-
-  const numRolls = parseInt(document.getElementById('sim-rolls').value);
-  const price    = parseFloat(document.getElementById('sim-price').value);
-  const pityOn   = document.getElementById('pity-on').checked;
-  const thresh   = parseInt(document.getElementById('pity-thresh').value)||90;
-
-  if (!numRolls||numRolls<=0) { msg('sim-msg','Number of rolls must be > 0.','err'); return; }
-  if (numRolls>100000)        { msg('sim-msg','Max 100,000 rolls per session.','err'); return; }
-  if (isNaN(price)||price<0)  { msg('sim-msg','Cost per roll must be ≥ 0.','err'); return; }
-
-  msg('sim-msg','','');
-
-  const rates   = getRates();
-  const overlay = document.getElementById('overlay');
-
-  function _doSim() {
-    const results = [];
-    const cnt     = {SSR:0,SR:0,R:0,N:0};
-    const itemCnt = {};
-    let pityCount = 0;
-
-    for (let i=0; i<numRolls; i++) {
-      const roll = rollOnce(rates, pityCount, pityOn, thresh);
-      results.push({roll:i+1,...roll,cost:price});
-      cnt[roll.rarity]++;
-      itemCnt[roll.item] = (itemCnt[roll.item]||0)+1;
-      pityCount = roll.rarity==='SSR' ? 0 : pityCount+1;
-    }
-
-    // Update pity display
-    document.getElementById('pity-counter-display').textContent = pityCount;
-    document.getElementById('pity-thresh-display').textContent  = thresh;
-    const pityPct = Math.min((pityCount/thresh)*100,100);
-    document.getElementById('pity-fill').style.width = pityPct+'%';
-
-    const totalCost = numRolls * price;
-    const mostCommon = Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0][0];
-
-    lastPull = {results,cnt,itemCnt,numRolls,totalCost,price,rates,mostCommon,pityOn,thresh};
-
-    addHistory({
-      type:'Single Simulation',
-      rolls:numRolls, cost:totalCost,
-      SSR:cnt.SSR, SR:cnt.SR, R:cnt.R, N:cnt.N,
-      ts:new Date().toLocaleString()
-    });
-
-    renderSimResults(lastPull);
-    document.getElementById('export-pull-btn').disabled = false;
-    overlay.classList.remove('show');
-    msg('sim-msg',`✅ Done — ${numRolls.toLocaleString()} rolls completed.`,'ok');
-  }
-
-  if (numRolls > 10000) {
-    document.getElementById('overlay-txt').textContent = 'Simulating ' + numRolls.toLocaleString() + ' rolls…';
-    overlay.classList.add('show');
-    setTimeout(_doSim, 30);
-  } else {
-    _doSim();
-  }
-}
-
-function renderSimResults(d) {
-  const {cnt,numRolls,totalCost,rates,itemCnt,mostCommon} = d;
-
-  document.getElementById('sim-overview').style.display='block';
-  document.getElementById('sim-full').style.display='block';
-  document.getElementById('sim-overview-sub').textContent =
-    `${numRolls.toLocaleString()} rolls · ${totalCost>0?'Cost: '+totalCost.toLocaleString():'Free'}`;
-
-  // Stat cards
-  const ssrPct = ((cnt.SSR/numRolls)*100).toFixed(2);
-  document.getElementById('sim-stat-cards').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-val">${numRolls.toLocaleString()}</div>
-      <div class="stat-lbl">Total Rolls</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val" style="color:var(--ssr);">${cnt.SSR}</div>
-      <div class="stat-lbl">SSR Pulled</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val">${totalCost>0?totalCost.toLocaleString():'—'}</div>
-      <div class="stat-lbl">Total Cost</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val" style="font-size:1.2rem;color:${rarityColor(mostCommon)};">${mostCommon}</div>
-      <div class="stat-lbl">Most Common</div>
-    </div>`;
-
-  // Bar chart: actual vs set
-  document.getElementById('sim-bar-chart').innerHTML = RARITIES.map(r => {
-    const actual = (cnt[r]/numRolls*100).toFixed(1);
-    return `<div class="bar-row">
-      <div class="bar-lbl" style="color:${rarityColor(r)};">${r}</div>
-      <div class="bar-track"><div class="bar-fill ${r}" style="width:${Math.min(actual,100)}%"></div></div>
-      <div class="bar-pct">${actual}% <span style="font-size:.62rem;color:#bbb;">(${rates[r]}%)</span></div>
-    </div>`;
-  }).join('');
-
-  // Rate comparison table
-  document.getElementById('rate-cmp-body').innerHTML = RARITIES.map(r => {
-    const actual = (cnt[r]/numRolls*100);
-    const diff   = actual - rates[r];
-    const cls    = Math.abs(diff)<2?'diff-ok':Math.abs(diff)<5?'diff-warn':'diff-bad';
-    return `<tr>
-      <td><span class="badge ${r}">${r}</span></td>
-      <td>${rates[r].toFixed(2)}%</td>
-      <td>${cnt[r].toLocaleString()}</td>
-      <td>${actual.toFixed(2)}%</td>
-      <td class="${cls}">${diff>=0?'+':''}${diff.toFixed(2)}%</td>
-    </tr>`;
-  }).join('');
-
-  // Items obtained
-  let html = '';
-  RARITIES.forEach(r => {
-    const rItems = Object.entries(itemCnt)
-      .filter(([nm])=>items.find(i=>i.name===nm&&i.rarity===r))
-      .sort((a,b)=>b[1]-a[1]);
-    if (!rItems.length) return;
-    html += `<div style="margin-bottom:.85rem;">
-      <div class="section-head" style="color:${rarityColor(r)};">${r} Items</div>
-      <div class="chips">${rItems.map(([nm,c])=>`
-        <div class="chip ${r}">${esc(nm)}<span class="chip-cnt">×${c}</span></div>`).join('')}
-      </div>
-    </div>`;
-  });
-  document.getElementById('items-obtained').innerHTML = html||'<div style="color:var(--muted);font-size:.845rem;">No items to display.</div>';
-}
-
-function resetSim() {
-  lastPull = null;
-  document.getElementById('sim-overview').style.display='none';
-  document.getElementById('sim-full').style.display='none';
-  document.getElementById('export-pull-btn').disabled=true;
-  document.getElementById('pity-counter-display').textContent='0';
-  document.getElementById('pity-fill').style.width='0%';
-  msg('sim-msg','','');
-}
-
-/* ══════════════════════════════════════════════════════════════
-   TOGGLE HELPER
-══════════════════════════════════════════════════════════════ */
-function toggleSub(checkId, subId) {
-  const on  = document.getElementById(checkId).checked;
-  const sub = document.getElementById(subId);
-  sub.className = 'sub-inputs' + (on ? '' : ' hidden');
-}
-
-/* ══════════════════════════════════════════════════════════════
-   PLAYER POV — PREVIEW
-══════════════════════════════════════════════════════════════ */
-function updatePOVPreview() {
-  const budget   = parseFloat(document.getElementById('pov-budget').value)||0;
-  const price    = parseFloat(document.getElementById('pov-price').value)||1;
-  const freeOn   = document.getElementById('free-on').checked;
-  const freeEvery= parseInt(document.getElementById('free-every').value)||10;
-  const freeGrant= parseInt(document.getElementById('free-grant').value)||1;
-
-  const paid  = Math.floor(budget/price);
-  const free  = freeOn ? Math.floor(paid/freeEvery)*freeGrant : 0;
-  const total = paid + free;
-
-  let html = `
-    <div><span class="pov-preview-val">${paid.toLocaleString()}</span> <span style="color:var(--muted);">paid</span></div>`;
-  if (freeOn) html += `<div><span class="pov-preview-free">+${free.toLocaleString()}</span> <span style="color:var(--muted);">free</span></div>`;
-  html += `<div><span class="pov-preview-total">${total.toLocaleString()}</span> <span style="color:var(--muted);">total rolls</span></div>`;
-  if (price>0) html += `<div><span style="color:var(--muted);">Budget used:</span> ${(paid*price).toLocaleString()}</div>`;
-
-  document.getElementById('pov-preview').innerHTML = html;
-}
-
-/* ══════════════════════════════════════════════════════════════
-   PLAYER POV — RUN
-══════════════════════════════════════════════════════════════ */
-function runPOV() {
-  const v = canSimulate();
-  if (!v.ok) { msg('pov-msg',v.msg,'err'); return; }
-
-  const budget    = parseFloat(document.getElementById('pov-budget').value);
-  const price     = parseFloat(document.getElementById('pov-price').value);
-  const numSims   = parseInt(document.getElementById('pov-sims').value);
-  const freeOn    = document.getElementById('free-on').checked;
-  const freeEvery = parseInt(document.getElementById('free-every').value)||10;
-  const freeGrant = parseInt(document.getElementById('free-grant').value)||1;
-  const pityOn    = document.getElementById('pov-pity-on').checked;
-  const thresh    = parseInt(document.getElementById('pity-thresh').value)||90;
-
-  if (!budget||budget<=0)      { msg('pov-msg','Budget must be > 0.','err'); return; }
-  if (!price||price<=0)        { msg('pov-msg','Price per roll must be > 0.','err'); return; }
-  if (!numSims||numSims<100)   { msg('pov-msg','Minimum 100 simulations for statistical accuracy.','err'); return; }
-  if (numSims>10000)           { msg('pov-msg','Maximum 10,000 simulations.','err'); return; }
-
-  const paid  = Math.floor(budget/price);
-  if (paid===0) { msg('pov-msg','Budget is too small for even one roll.','err'); return; }
-
-  const free  = freeOn ? Math.floor(paid/freeEvery)*freeGrant : 0;
-  const total = paid + free;
-
-  msg('pov-msg','','');
-
-  const rates    = getRates();
-  const ssrCounts= [];
-  let zeroSSR=0, atLeast1=0, totalSSR=0, bestSSR=0, worstSSR=Infinity;
-
-  const overlay = document.getElementById('overlay');
-  overlay.classList.add('show');
-
-  setTimeout(() => {
-    for (let s=0; s<numSims; s++) {
-      let pity=0, ssrC=0;
-      for (let r=0; r<total; r++) {
-        const roll = rollOnce(rates, pity, pityOn, thresh);
-        if (roll.rarity==='SSR') { ssrC++; pity=0; } else pity++;
-      }
-      ssrCounts.push(ssrC);
-      if (ssrC===0) zeroSSR++; else atLeast1++;
-      totalSSR += ssrC;
-      bestSSR   = Math.max(bestSSR,ssrC);
-      worstSSR  = Math.min(worstSSR,ssrC);
-    }
-    worstSSR = worstSSR===Infinity?0:worstSSR;
-
-    const avgSSR  = totalSSR/numSims;
-    const pctGood = (atLeast1/numSims)*100;
-    const pctZero = (zeroSSR/numSims)*100;
-
-    lastPOV = {budget,price,paid,free,total,numSims,pctGood,pctZero,avgSSR,bestSSR,worstSSR,ssrCounts,rates,freeOn,freeEvery,freeGrant};
-
-    addHistory({
-      type:'Player POV (Monte Carlo)',
-      rolls:total, cost:budget,
-      SSR:`${avgSSR.toFixed(2)} avg`,
-      SR:'—',R:'—',N:'—',
-      ts:new Date().toLocaleString(),
-      extra:`P(≥1 SSR): ${pctGood.toFixed(1)}%`
-    });
-
-    renderPOV(lastPOV);
-    document.getElementById('export-pov-btn').disabled=false;
-    overlay.classList.remove('show');
-  }, 30);
-}
-
-function renderPOV(d) {
-  const {paid,free,total,numSims,pctGood,pctZero,avgSSR,bestSSR,worstSSR,ssrCounts,budget,price,rates,freeOn} = d;
-
-  document.getElementById('pov-results').style.display='block';
-  document.getElementById('pov-result-sub').textContent = `${numSims.toLocaleString()} runs · ${total.toLocaleString()} rolls each`;
-
-  document.getElementById('mc-stats').innerHTML = [
-    {val:paid.toLocaleString(),lbl:'Paid Rolls'},
-    {val:freeOn?'+'+free.toLocaleString():'0',lbl:'Free Rolls',col:freeOn?'#16a34a':undefined},
-    {val:total.toLocaleString(),lbl:'Total Rolls'},
-    {val:pctGood.toFixed(1)+'%',lbl:'Chance ≥1 SSR',col:pctGood>=50?'#16a34a':'#dc2626',big:true},
-    {val:pctZero.toFixed(1)+'%',lbl:'Chance 0 SSR',col:'#dc2626',big:true},
-    {val:avgSSR.toFixed(2),lbl:'Avg SSR / Run'},
-    {val:bestSSR,lbl:'Best Case (SSR)',col:'var(--ssr)'},
-    {val:worstSSR,lbl:'Worst Case (SSR)',col:'#dc2626'},
-    {val:numSims.toLocaleString(),lbl:'Simulations'}
-  ].map(s=>`
-    <div class="mc-card">
-      <div class="mc-val${s.big?' big':''}" style="${s.col?'color:'+s.col:''}">${s.val}</div>
-      <div class="mc-lbl">${s.lbl}</div>
-    </div>`).join('');
-
-  // SSR distribution chart
-  const distMap={};
-  ssrCounts.forEach(c=>distMap[c]=(distMap[c]||0)+1);
-  const keys = Object.keys(distMap).map(Number).sort((a,b)=>a-b).slice(0,12);
-  const maxFreq = Math.max(...Object.values(distMap));
-  document.getElementById('ssr-dist-chart').innerHTML = keys.map(k=>{
-    const pct = (distMap[k]/numSims*100).toFixed(1);
-    const w   = (distMap[k]/maxFreq*100).toFixed(1);
-    return `<div class="bar-row">
-      <div class="bar-lbl" style="width:46px;font-weight:700;color:var(--rouge);">${k} SSR</div>
-      <div class="bar-track"><div class="bar-fill rouge" style="width:${w}%"></div></div>
-      <div class="bar-pct">${pct}%</div>
-    </div>`;
-  }).join('');
-
-  // Insight
-  let insight='';
-  const costStr = budget.toLocaleString();
-  const freeNote = freeOn ? ` (${paid.toLocaleString()} paid + ${free.toLocaleString()} free)` : '';
-  if (pctGood>=90)
-    insight=`With a budget of ${costStr}, you get ${total.toLocaleString()} total rolls${freeNote}. Excellent odds — ${pctGood.toFixed(1)}% chance of pulling at least 1 SSR. On average, expect ${avgSSR.toFixed(2)} SSR per session.`;
-  else if (pctGood>=60)
-    insight=`With ${total.toLocaleString()} rolls${freeNote} from a ${costStr} budget, you have a reasonable ${pctGood.toFixed(1)}% shot at ≥1 SSR. Average yield is ${avgSSR.toFixed(2)} SSR per run. ${pctZero.toFixed(1)}% of players will walk away with nothing.`;
-  else if (pctGood>=30)
-    insight=`Your ${costStr} budget gives ${total.toLocaleString()} rolls${freeNote}, but the odds aren't great — only ${pctGood.toFixed(1)}% chance of hitting SSR. Consider increasing your budget or waiting for a rate-up event.`;
-  else
-    insight=`At only ${pctGood.toFixed(1)}% success probability with ${total.toLocaleString()} rolls, getting an SSR from a ${costStr} budget is unlikely. The SSR base rate is ${rates.SSR}% — approximately ${Math.ceil(100/rates.SSR)} rolls are needed for a ~63% chance of at least one.`;
-
-  document.getElementById('insight-txt').textContent = insight;
-}
-
-/* ══════════════════════════════════════════════════════════════
-   HISTORY
-══════════════════════════════════════════════════════════════ */
-function addHistory(e) {
-  simHistory.unshift(e);
-  if (simHistory.length>10) simHistory.pop();
-  renderHistory();
-}
-
-function renderHistory() {
-  const body = document.getElementById('history-body');
-  if (!simHistory.length) {
-    body.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No history yet.<br>Run a simulation to see it recorded here.</div></div>`;
-    return;
-  }
-  body.innerHTML = `<div class="hist-list">${simHistory.map((e,i)=>`
-    <div class="hist-item">
-      <div class="hist-num">${i+1}</div>
-      <div class="hist-meta">
-        <div class="hist-type">${e.type}</div>
-        <div class="hist-detail">
-          ${e.rolls.toLocaleString()} rolls ·
-          ${typeof e.SSR==='number'?e.SSR+' SSR':'SSR: '+e.SSR}
-          ${e.extra?' · '+e.extra:''}
-        </div>
-      </div>
-      <div style="text-align:right;">
-        <div class="hist-cost">${typeof e.cost==='number'?e.cost.toLocaleString():e.cost}</div>
-        <div class="hist-time">${e.ts}</div>
-      </div>
-    </div>`).join('')}
-  </div>`;
-}
-
-function clearHistory() {
-  if (!simHistory.length) return;
-  if (!confirm('Clear all history?')) return;
-  simHistory=[];
-  renderHistory();
-}
-
-/* ══════════════════════════════════════════════════════════════
-   CSV EXPORT
-══════════════════════════════════════════════════════════════ */
-function downloadCSV(rows, filename) {
-  const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+/** Trigger a browser CSV download via Blob + object URL */
+function downloadCSV(csvText, filename) {
+  // BOM (﻿) ensures Thai characters render correctly in Excel
+  const blob = new Blob(['﻿' + csvText], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href=url; a.download=filename; a.click();
+  const link = Object.assign(document.createElement('a'), { href:url, download:filename });
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
 
+/** Show an inline error message element */
+function showErr(id, msg) {
+  const el = $(id);
+  el.textContent = msg;
+  el.classList.add('show');
+}
+/** Hide an inline error */
+function hideErr(id) {
+  const el = $(id);
+  el.textContent = '';
+  el.classList.remove('show');
+}
+
+/* ─────────────────────────────────────────────────────────────
+   TAB / PANEL NAVIGATION
+───────────────────────────────────────────────────────────── */
+function switchPanel(btn) {
+  // Deactivate all panels and tab buttons
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  // Activate selected
+  $(btn.dataset.panel).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ─────────────────────────────────────────────────────────────
+   TOGGLE SWITCH — show/hide sub-option blocks
+───────────────────────────────────────────────────────────── */
+function toggleSubOpts(blockId, checkbox) {
+  $(blockId).classList.toggle('open', checkbox.checked);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   RATE SETTINGS — VALIDATION
+───────────────────────────────────────────────────────────── */
+/**
+ * Read all four rate inputs and update the running-total indicator.
+ * @returns {boolean} true if rates are valid (sum == 100, no negatives)
+ */
+function onRateInput() {
+  const rates = getRates();
+  const total = rates.SSR + rates.SR + rates.R + rates.N;
+  const hasNeg = Object.values(rates).some(v => v < 0);
+  const ok = !hasNeg && Math.abs(total - 100) < 0.0011; // tolerance for float drift
+
+  const el = $('rateTotal');
+  el.className = 'rate-total ' + (ok ? 'valid' : 'invalid');
+
+  if (hasNeg)
+    el.textContent = `❌ ห้ามใช้ค่าติดลบ! (รวม: ${total.toFixed(2)}%)`;
+  else if (!ok)
+    el.textContent = `❌ รวม: ${total.toFixed(2)}% — ต้องรวมได้ 100% พอดี!`;
+  else
+    el.textContent = `✅ รวม: 100.00% — ถูกต้องแล้ว!`;
+
+  return ok;
+}
+
+/** Reset all four rate inputs to the default 1 / 9 / 30 / 60 values */
+function resetRates() {
+  document.getElementById('rate-ssr').value = 1;
+  document.getElementById('rate-sr').value  = 9;
+  document.getElementById('rate-r').value   = 30;
+  document.getElementById('rate-n').value   = 60;
+  onRateInput(); // refresh the total indicator
+}
+
+/** Return the four rates as a plain object {SSR, SR, R, N} */
+function getRates() {
+  return {
+    SSR: parseFloat($('rate-ssr').value) || 0,
+    SR:  parseFloat($('rate-sr').value)  || 0,
+    R:   parseFloat($('rate-r').value)   || 0,
+    N:   parseFloat($('rate-n').value)   || 0,
+  };
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ITEM POOL MANAGEMENT
+───────────────────────────────────────────────────────────── */
+/** Re-render the entire item table from the current itemPool array */
+function renderItemTable() {
+  const wrap = $('itemTableWrap');
+
+  if (itemPool.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <div class="emo">📦</div>
+        <p>ยังไม่มีไอเทมในคลัง<br>กรอกชื่อและระดับด้านบนแล้วกด เพิ่มไอเทม</p>
+      </div>`;
+    return;
+  }
+
+  // Group items by rarity for ordered display
+  const grouped = { SSR:[], SR:[], R:[], N:[] };
+  itemPool.forEach(it => grouped[it.rarity].push(it));
+
+  let rows = '';
+  let idx  = 1;
+  RARITIES.forEach(rarity => {
+    grouped[rarity].forEach(item => {
+      rows += `
+        <tr id="row-${item.id}">
+          <td style="color:var(--tx4);font-size:.78rem">${idx++}</td>
+          <td id="name-cell-${item.id}" style="font-weight:600">${escHtml(item.name)}</td>
+          <td>
+            <span class="badge badge-${rarity.toLowerCase()}">
+              ${RARITY_EMO[rarity]} ${rarity}
+            </span>
+          </td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-outline btn-xs"
+                      onclick="editItem(${item.id})">✏️ แก้ไข</button>
+              <button class="btn btn-danger  btn-xs"
+                      onclick="deleteItem(${item.id})">🗑️ ลบ</button>
+            </div>
+          </td>
+        </tr>`;
+    });
+  });
+
+  wrap.innerHTML = `
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>ชื่อไอเทม</th>
+            <th>ระดับ</th>
+            <th>การจัดการ</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+/** Add a new item from the form fields */
+function addItem() {
+  hideErr('addItemErr');
+  const nameEl   = $('newItemName');
+  const rarityEl = $('newItemRarity');
+  const name = nameEl.value.trim();
+
+  if (!name) {
+    nameEl.classList.add('has-error');
+    showErr('addItemErr', '⚠️ กรุณากรอกชื่อไอเทม');
+    return;
+  }
+  nameEl.classList.remove('has-error');
+
+  itemPool.push({ id: _nextId++, name, rarity: rarityEl.value });
+  nameEl.value = '';
+  renderItemTable();
+}
+
+/** Switch a table row into inline-edit mode */
+function editItem(id) {
+  const item = itemPool.find(i => i.id === id);
+  if (!item) return;
+
+  // Replace name cell with an input field
+  $(`name-cell-${id}`).innerHTML =
+    `<input type="text" class="form-input" id="edit-inp-${id}"
+            value="${escHtml(item.name)}"
+            style="padding:6px 10px;margin:0">`;
+
+  // Replace action buttons with Save/Cancel
+  $(`row-${id}`).querySelector('td:last-child').innerHTML = `
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-success btn-xs" onclick="saveEdit(${id})">💾 บันทึก</button>
+      <button class="btn btn-danger  btn-xs" onclick="renderItemTable()">❌ ยกเลิก</button>
+    </div>`;
+
+  $(`edit-inp-${id}`).focus();
+}
+
+/** Commit an inline edit */
+function saveEdit(id) {
+  const inp  = $(`edit-inp-${id}`);
+  const name = inp ? inp.value.trim() : '';
+  if (!name) return;
+
+  const item = itemPool.find(i => i.id === id);
+  if (item) item.name = name;
+  renderItemTable();
+}
+
+/** Remove an item from the pool */
+function deleteItem(id) {
+  itemPool = itemPool.filter(i => i.id !== id);
+  renderItemTable();
+}
+
+/**
+ * Validate that every rarity with rate > 0 has at least one item.
+ * Returns an error string, or null if all OK.
+ */
+function validatePoolForRates(rates) {
+  for (const r of RARITIES) {
+    if (rates[r] > 0 && itemPool.filter(i => i.rarity === r).length === 0) {
+      return `ระดับ ${r} มีอัตรา ${rates[r]}% แต่ไม่มีไอเทมในคลัง` +
+             ` — กรุณาเพิ่มไอเทมหรือตั้งอัตราเป็น 0`;
+    }
+  }
+  return null;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CORE RNG ENGINE
+───────────────────────────────────────────────────────────── */
+/**
+ * Execute a single gacha roll.
+ *
+ * Algorithm:
+ *  1. [Pity override] If forceSSR is true, rarity is always 'SSR'.
+ *  2. Otherwise generate rand ∈ [0, 100) and walk the cumulative
+ *     probability distribution in RARITIES order, stopping at the
+ *     first tier whose cumulative threshold exceeds rand.
+ *  3. Uniformly sample one item from the resolved rarity pool.
+ *
+ * @param  {{ SSR:number, SR:number, R:number, N:number }} rates
+ * @param  {boolean} forceSSR  — pity override flag
+ * @returns {{ rarity:string, item:Object } | null}
+ */
+function rollOnce(rates, forceSSR = false) {
+  let rarity;
+
+  if (forceSSR) {
+    rarity = 'SSR';
+  } else {
+    const rand = Math.random() * 100; // uniform in [0, 100)
+    let cumulative = 0;
+    rarity = 'N'; // safe fallback (handles floating-point edge cases)
+    for (const r of RARITIES) {
+      cumulative += rates[r];
+      if (rand < cumulative) { rarity = r; break; }
+    }
+  }
+
+  // Uniform random pick from the rarity's item pool
+  const pool = itemPool.filter(i => i.rarity === rarity);
+  if (!pool.length) return null; // safety guard — should be caught by validatePoolForRates
+
+  const item = pool[Math.floor(Math.random() * pool.length)];
+  return { rarity, item };
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SINGLE SIMULATION
+───────────────────────────────────────────────────────────── */
+function runSingleSim() {
+  hideErr('simErr');
+
+  // 1. Validate rates
+  if (!onRateInput()) {
+    showErr('simErr', '⚠️ กรุณาตรวจสอบอัตราการสุ่มให้รวม 100% ก่อน');
+    return;
+  }
+
+  // 2. Validate user inputs
+  const numRolls = parseInt($('simRolls').value, 10);
+  const costEach = parseFloat($('simCost').value);
+
+  if (!numRolls || numRolls <= 0) {
+    showErr('simErr', '⚠️ จำนวนการสุ่มต้องมากกว่า 0');
+    return;
+  }
+  if (isNaN(costEach) || costEach < 0) {
+    showErr('simErr', '⚠️ ค่าใช้จ่ายต้องไม่ติดลบ');
+    return;
+  }
+
+  // 3. Validate item pool completeness
+  const rates = getRates();
+  const poolErr = validatePoolForRates(rates);
+  if (poolErr) { showErr('simErr', '⚠️ ' + poolErr); return; }
+
+  // 4. Read pity settings
+  const pityOn = $('simPityToggle').checked;
+  const pityAt = parseInt($('simPityAt').value, 10) || 80;
+
+  // 5. ── Simulation loop ──
+  const rollLog     = [];                         // raw roll records
+  const rarityCnts  = { SSR:0, SR:0, R:0, N:0 }; // rarity occurrence totals
+  const itemCnts    = {};                          // itemName → count
+  let   pityCtr     = 0;  // rolls since last SSR (pity counter)
+  let   pityFired   = 0;  // how many times pity was triggered
+
+  for (let i = 0; i < numRolls; i++) {
+    let forceSSR = false;
+
+    if (pityOn) {
+      pityCtr++;
+      // When the pity threshold is reached, force an SSR on this roll
+      if (pityCtr >= pityAt) {
+        forceSSR = true;
+        pityFired++;
+      }
+    }
+
+    const result = rollOnce(rates, forceSSR);
+    if (!result) continue; // guarded: should never happen if pool is valid
+
+    // Any SSR (natural or pity-forced) resets the pity counter
+    if (result.rarity === 'SSR') pityCtr = 0;
+
+    rollLog.push({
+      roll:     i + 1,
+      rarity:   result.rarity,
+      itemName: result.item.name,
+      cost:     costEach,
+    });
+
+    rarityCnts[result.rarity]++;
+    itemCnts[result.item.name] = (itemCnts[result.item.name] || 0) + 1;
+  }
+
+  // Store for CSV export
+  lastPullLog   = rollLog;
+  lastSimCounts = { ...rarityCnts };
+
+  // Append to history (newest first, cap at 20 entries)
+  rollLog.slice(-20).reverse().forEach(r => rollHistory.unshift(r));
+  rollHistory = rollHistory.slice(0, 20);
+  renderHistory();
+
+  // 6. Derive "most common rarity"
+  let topRarity = 'N', topCount = 0;
+  RARITIES.forEach(r => {
+    if (rarityCnts[r] > topCount) { topCount = rarityCnts[r]; topRarity = r; }
+  });
+
+  // 7. Update summary cards
+  $('res-total-rolls').textContent = fmtNum(numRolls);
+  $('res-total-cost').textContent  = fmtNum(numRolls * costEach);
+  $('res-ssr-count').textContent   = fmtNum(rarityCnts.SSR);
+  $('res-top-rarity').textContent  = `${RARITY_EMO[topRarity]} ${topRarity}`;
+
+  // Pity fired annotation
+  const pNote = $('pityFiredNote');
+  if (pityOn && pityFired > 0) {
+    pNote.style.display = 'block';
+    pNote.innerHTML =
+      `<span class="info-pill pill-amber">⚡ Pity ทำงาน ${pityFired} ครั้ง (ทุก ${pityAt} roll)</span>`;
+  } else {
+    pNote.style.display = 'none';
+  }
+
+  // 8. Build statistics comparison table
+  let tableRows = '';
+  RARITIES.forEach(r => {
+    const configured = rates[r];
+    const count      = rarityCnts[r];
+    const actual     = numRolls > 0 ? (count / numRolls) * 100 : 0;
+    const diff       = actual - configured;
+    const absDiff    = Math.abs(diff);
+    const diffClass  = absDiff < 1 ? 'diff-good' : absDiff < 3 ? 'diff-warn' : 'diff-bad';
+    const sign       = diff >= 0 ? '+' : '';
+
+    tableRows += `
+      <tr>
+        <td><span class="badge badge-${r.toLowerCase()}">${RARITY_EMO[r]} ${r}</span></td>
+        <td>${configured.toFixed(2)}%</td>
+        <td>${fmtNum(count)}</td>
+        <td>${actual.toFixed(2)}%</td>
+        <td class="${diffClass}">${sign}${diff.toFixed(2)}%</td>
+      </tr>`;
+  });
+  $('statsTableBody').innerHTML = tableRows;
+
+  // 9. Render item-result panel and chart
+  renderItemResults(itemCnts, rarityCnts);
+  renderRarityChart(rates, rarityCnts, numRolls);
+
+  // 10. Reveal results and export buttons
+  $('simResults').style.display    = 'block';
+  $('exportPullBtn').style.display = 'inline-flex';
+  $('exportSummBtn').style.display = 'inline-flex';
+  $('simResults').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ITEM RESULTS PANEL
+───────────────────────────────────────────────────────────── */
+function renderItemResults(itemCnts, rarityCnts) {
+  const wrap = $('itemResultsWrap');
+  let html   = '';
+
+  RARITIES.forEach(rarity => {
+    const tierItems = itemPool.filter(i => i.rarity === rarity);
+    const tierTotal = rarityCnts[rarity];
+    if (!tierItems.length && !tierTotal) return;
+
+    html += `
+      <div style="margin-bottom:20px">
+        <div class="sec-head">
+          <span class="badge badge-${rarity.toLowerCase()}">${RARITY_EMO[rarity]} ${rarity}</span>
+          <span>รวม ${fmtNum(tierTotal)} ชิ้น</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:8px">`;
+
+    tierItems.forEach(item => {
+      const cnt     = itemCnts[item.name] || 0;
+      const cntCls  = cnt > 0 ? rarity.toLowerCase() : 'zero';
+      html += `
+        <div class="item-result-row ${rarity.toLowerCase()}">
+          <span class="irr-name">${escHtml(item.name)}</span>
+          <span class="irr-cnt ${cntCls}">×${cnt}</span>
+        </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  wrap.innerHTML = html ||
+    `<p style="color:var(--tx4);text-align:center">ไม่มีผลลัพธ์</p>`;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   RARITY CHART (configured vs actual)
+───────────────────────────────────────────────────────────── */
+function renderRarityChart(rates, counts, total) {
+  if (chartInstance) chartInstance.destroy();
+
+  const labels     = RARITIES.map(r => `${RARITY_EMO[r]} ${r}`);
+  const configured = RARITIES.map(r => rates[r]);
+  const actual     = RARITIES.map(r =>
+    total > 0 ? +((counts[r] / total) * 100).toFixed(3) : 0
+  );
+
+  chartInstance = new Chart($('rarityChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'ตั้งค่า (%)',
+          data: configured,
+          backgroundColor: 'rgba(192,132,252,.55)',
+          borderColor: '#C084FC',
+          borderWidth: 2,
+          borderRadius: 7,
+        },
+        {
+          label: 'จริง (%)',
+          data: actual,
+          backgroundColor: 'rgba(244,114,182,.55)',
+          borderColor: '#F472B6',
+          borderWidth: 2,
+          borderRadius: 7,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'top', labels:{ usePointStyle:true, padding:14 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${Number(ctx.raw).toFixed(2)}%`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: v => v + '%' },
+          grid: { color:'rgba(226,232,240,.6)' }
+        },
+        x: { grid: { display:false } }
+      }
+    }
+  });
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CSV EXPORT — SINGLE SIMULATION
+───────────────────────────────────────────────────────────── */
+/** Button 1: every individual roll as its own row */
 function exportPullCSV() {
-  if (!lastPull) return;
-  const rows = [['Roll No.','Rarity','Item Name','Cost per Roll','Pity Triggered']];
-  lastPull.results.forEach(r=>rows.push([r.roll,r.rarity,r.item,r.cost,r.pity?'Yes':'No']));
-  downloadCSV(rows,'gacha-pull-result.csv');
+  if (!lastPullLog.length) return;
+
+  let csv = 'Roll No.,Rarity,Item Name,Cost (THB)\n';
+  lastPullLog.forEach(r => {
+    csv += `${r.roll},${r.rarity},"${r.itemName}",${r.cost}\n`;
+  });
+  downloadCSV(csv, 'bunnychuu_pull_results.csv');
 }
 
-function exportPOVCSV() {
-  if (!lastPOV) return;
-  const d = lastPOV;
-  const rows = [
-    ['Parameter','Value'],
-    ['Budget',d.budget],
-    ['Price per Roll',d.price],
-    ['Paid Rolls',d.paid],
-    ['Free Roll Enabled',d.freeOn?'Yes':'No'],
-    d.freeOn?['Free Roll Rule',`Every ${d.freeEvery} paid = ${d.freeGrant} free`]:['Free Roll Rule','Disabled'],
-    ['Free Rolls Granted',d.free],
-    ['Total Rolls',d.total],
-    ['Simulations Run',d.numSims],
-    ['Chance ≥1 SSR (%)',d.pctGood.toFixed(4)],
-    ['Chance 0 SSR (%)',d.pctZero.toFixed(4)],
-    ['Average SSR per Run',d.avgSSR.toFixed(6)],
-    ['Best Case SSR',d.bestSSR],
-    ['Worst Case SSR',d.worstSSR],
-    [],
-    ['SSR Count Distribution'],
-    ['SSR Count','Frequency','Percentage (%)']
-  ];
-  const dist={};
-  d.ssrCounts.forEach(c=>dist[c]=(dist[c]||0)+1);
-  Object.keys(dist).sort((a,b)=>a-b).forEach(k=>rows.push([k,dist[k],((dist[k]/d.numSims)*100).toFixed(2)]));
-  downloadCSV(rows,'gacha-player-pov-summary.csv');
+/** Button 2: aggregated configured-vs-actual rarity statistics */
+function exportSummaryCSV() {
+  if (!lastPullLog.length) return;
+
+  const rates = getRates();
+  const total = lastPullLog.length;
+
+  let csv = 'Rarity,Configured Rate (%),Count,Actual Rate (%),Difference (%)\n';
+  RARITIES.forEach(r => {
+    const count  = lastSimCounts[r] || 0;
+    const actual = total > 0 ? ((count / total) * 100).toFixed(4) : '0.0000';
+    const diff   = (parseFloat(actual) - rates[r]).toFixed(4);
+    csv += `${r},${rates[r]},${count},${actual},${diff}\n`;
+  });
+
+  csv += `\nTotal Rolls,${total}\n`;
+  csv += `Total Cost (THB),${total * (lastPullLog[0]?.cost || 0)}\n`;
+  csv += `Total SSR,${lastSimCounts.SSR || 0}\n`;
+
+  downloadCSV(csv, 'bunnychuu_sim_summary.csv');
 }
 
-/* ══════════════════════════════════════════════════════════════
-   INIT
-══════════════════════════════════════════════════════════════ */
-validateRates();
-renderRateChart();
-renderPoolPills();
-renderHistory();
-updatePOVPreview();
+/* ─────────────────────────────────────────────────────────────
+   MONTE CARLO SIMULATION
+───────────────────────────────────────────────────────────── */
+function runMonteCarlo() {
+  hideErr('mcErr');
 
-// Live-update pity threshold display as user types
-document.getElementById('pity-thresh').addEventListener('input', function() {
-  const v = parseInt(this.value)||90;
-  document.getElementById('pity-thresh-display').textContent = v;
-  const cur = parseInt(document.getElementById('pity-counter-display').textContent)||0;
-  const pct = Math.min((cur/v)*100, 100);
-  document.getElementById('pity-fill').style.width = pct+'%';
+  // 1. Validate rates
+  if (!onRateInput()) {
+    showErr('mcErr', '⚠️ ตรวจสอบอัตราการสุ่มให้รวม 100% ก่อน');
+    return;
+  }
+
+  // 2. Read and validate inputs
+  const budget    = parseFloat($('mcBudget').value);
+  const costEach  = parseFloat($('mcCostPer').value);
+  const numSims   = parseInt($('mcSims').value, 10);
+
+  if (!budget  || budget  <= 0) { showErr('mcErr','⚠️ กรุณากรอกงบประมาณ (> 0)'); return; }
+  if (!costEach|| costEach<= 0) { showErr('mcErr','⚠️ ค่าใช้จ่ายต้องมากกว่า 0');  return; }
+  if (!numSims || numSims < 1)  { showErr('mcErr','⚠️ จำนวน simulation ต้อง ≥ 1');  return; }
+
+  // 3. Validate pool
+  const rates  = getRates();
+  const poolE  = validatePoolForRates(rates);
+  if (poolE) { showErr('mcErr','⚠️ ' + poolE); return; }
+
+  // 4. Read free-roll settings
+  const freeRollOn  = $('mcFreeRollToggle').checked;
+  const freeEvery   = parseInt($('mcFreeEvery').value,  10) || 10;
+  const freeAmount  = parseInt($('mcFreeAmount').value, 10) || 1;
+
+  // 5. Read pity settings
+  const pityOn = $('mcPityToggle').checked;
+  const pityAt = parseInt($('mcPityAt').value, 10) || 80;
+
+  // How many paid rolls can the player afford?
+  const paidRolls = Math.floor(budget / costEach);
+
+  // Show spinner while running
+  const btn = $('mcRunBtn');
+  btn.innerHTML = '<span class="spinner"></span> กำลังคำนวณ…';
+  btn.disabled = true;
+
+  // Defer execution one frame so the DOM updates (spinner appears)
+  setTimeout(() => {
+    // ── Monte Carlo loop ──
+    const playerResults = [];
+    let totalSSR    = 0;
+    let withSSR     = 0;
+    let bestSSR     = 0;
+    let worstSSR    = Infinity;
+    const ssrDist   = {}; // ssrCount → frequency
+    let rollsSum    = 0;
+
+    for (let s = 0; s < numSims; s++) {
+      // Free rolls derive ONLY from paid rolls (no chaining)
+      const freeRolls  = freeRollOn ? Math.floor(paidRolls / freeEvery) * freeAmount : 0;
+      const totalRolls = paidRolls + freeRolls;
+      rollsSum += totalRolls;
+
+      const cnts = { SSR:0, SR:0, R:0, N:0 };
+      let pityCtr = 0; // independent pity counter per simulated player
+
+      for (let roll = 0; roll < totalRolls; roll++) {
+        let forceSSR = false;
+        if (pityOn) {
+          pityCtr++;
+          if (pityCtr >= pityAt) forceSSR = true;
+        }
+
+        const result = rollOnce(rates, forceSSR);
+        if (!result) continue;
+        if (result.rarity === 'SSR') pityCtr = 0;
+        cnts[result.rarity]++;
+      }
+
+      playerResults.push({
+        totalRolls,
+        SSR: cnts.SSR, SR: cnts.SR,
+        R:   cnts.R,   N:  cnts.N,
+      });
+
+      totalSSR += cnts.SSR;
+      if (cnts.SSR >= 1) withSSR++;
+      if (cnts.SSR > bestSSR)  bestSSR  = cnts.SSR;
+      if (cnts.SSR < worstSSR) worstSSR = cnts.SSR;
+      ssrDist[cnts.SSR] = (ssrDist[cnts.SSR] || 0) + 1;
+    }
+
+    if (worstSSR === Infinity) worstSSR = 0;
+    mcPlayerData = playerResults;
+
+    const avgSSR   = totalSSR  / numSims;
+    const avgRolls = rollsSum  / numSims;
+    const chancePct = (withSSR / numSims) * 100;
+    const saltPct   = 100 - chancePct;
+
+    // 6. Update results UI
+    $('mc-chance-ssr').textContent = chancePct.toFixed(1) + '%';
+    $('mc-salt-rate').textContent  = saltPct.toFixed(1)   + '%';
+    $('mc-avg-ssr').textContent    = avgSSR.toFixed(2);
+    $('mc-avg-rolls').textContent  = fmtNum(Math.round(avgRolls));
+    $('mc-best-ssr').textContent   = fmtNum(bestSSR) + ' ชิ้น';
+    $('mc-worst-ssr').textContent  = fmtNum(worstSSR)+ ' ชิ้น';
+
+    // 7. Build Thai insight text
+    buildInsight({
+      budget, costEach, paidRolls, freeRollOn, freeEvery, freeAmount,
+      chancePct, saltPct, avgSSR, bestSSR, worstSSR,
+      pityOn, pityAt, numSims
+    });
+
+    // 8. Render SSR distribution chart
+    renderMCChart(ssrDist, numSims);
+
+    // 9. Show results panel
+    $('mcResults').style.display = 'block';
+    $('mcResults').scrollIntoView({ behavior:'smooth', block:'start' });
+
+    // Save this run to history before restoring the button
+    saveMCHistory({
+      budget, costEach, paidRolls, numSims,
+      freeRollOn, freeEvery: freeRollOn ? parseInt($('mcFreeEvery').value)||10 : null,
+      freeAmount: freeRollOn ? parseInt($('mcFreeAmount').value)||1 : null,
+      pityOn, pityAt: pityOn ? pityAt : null,
+      chancePct, saltPct, avgSSR, avgRolls, bestSSR, worstSSR,
+    });
+
+    // Restore button
+    btn.innerHTML = '🚀 เริ่ม Monte Carlo Simulation';
+    btn.disabled  = false;
+  }, 20);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MONTE CARLO RUN HISTORY
+───────────────────────────────────────────────────────────── */
+/** Push the latest run's summary into mcRunHistory and refresh the UI */
+function saveMCHistory(entry) {
+  // Attach a human-readable timestamp
+  const now = new Date();
+  entry.timestamp = now.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  entry.runNo = mcRunHistory.length + 1;
+
+  // Newest first, keep at most 10 entries
+  mcRunHistory.unshift(entry);
+  if (mcRunHistory.length > 10) mcRunHistory.pop();
+
+  renderMCHistory();
+
+  // Show the history card
+  $('mcHistCard').style.display = 'block';
+}
+
+/** Render the MC history list */
+function renderMCHistory() {
+  const list = $('mcHistList');
+  if (!mcRunHistory.length) {
+    list.innerHTML = `<div class="empty-state"><div class="emo">🎰</div>
+      <p>ยังไม่มีประวัติ — กด เริ่ม Monte Carlo เพื่อบันทึก</p></div>`;
+    return;
+  }
+
+  list.innerHTML = mcRunHistory.map((e, i) => {
+    // Config tags
+    const tags = [
+      `💰 ${fmtNum(e.budget)}฿`,
+      `🎲 ${e.costEach}฿/roll`,
+      `👥 ${fmtNum(e.numSims)} sims`,
+      `🧾 ${fmtNum(e.paidRolls)} paid rolls`,
+      e.freeRollOn ? `🎁 Free: ทุก ${e.freeEvery} → +${e.freeAmount}` : null,
+      e.pityOn     ? `⚡ Pity: ${e.pityAt} rolls`                      : null,
+    ].filter(Boolean);
+
+    return `
+      <div class="mc-hist-entry">
+        <div class="mch-header">
+          <span class="mch-run-no">Run #${e.runNo}</span>
+          <div class="mch-config">
+            ${tags.map(t => `<span class="mch-tag">${t}</span>`).join('')}
+          </div>
+          <span class="mch-time">🕐 ${e.timestamp}</span>
+        </div>
+        <div class="mch-stats">
+          <div class="mch-stat">
+            <div class="mch-stat-val green">${e.chancePct.toFixed(1)}%</div>
+            <div class="mch-stat-lbl">โอกาส ≥1 SSR</div>
+          </div>
+          <div class="mch-stat">
+            <div class="mch-stat-val red">${e.saltPct.toFixed(1)}%</div>
+            <div class="mch-stat-lbl">Salt Rate</div>
+          </div>
+          <div class="mch-stat">
+            <div class="mch-stat-val">${e.avgSSR.toFixed(2)}</div>
+            <div class="mch-stat-lbl">SSR เฉลี่ย</div>
+          </div>
+          <div class="mch-stat">
+            <div class="mch-stat-val blue">${fmtNum(Math.round(e.avgRolls))}</div>
+            <div class="mch-stat-lbl">Roll เฉลี่ย</div>
+          </div>
+          <div class="mch-stat">
+            <div class="mch-stat-val gold">${fmtNum(e.bestSSR)}</div>
+            <div class="mch-stat-lbl">🏆 Best SSR</div>
+          </div>
+          <div class="mch-stat">
+            <div class="mch-stat-val" style="color:var(--tx4)">${fmtNum(e.worstSSR)}</div>
+            <div class="mch-stat-lbl">😭 Worst SSR</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/** Clear all MC run history */
+function clearMCHistory() {
+  mcRunHistory = [];
+  renderMCHistory();
+  $('mcHistCard').style.display = 'none';
+}
+
+/* ─────────────────────────────────────────────────────────────
+   INSIGHT TEXT (natural Thai)
+───────────────────────────────────────────────────────────── */
+function buildInsight({ budget, costEach, paidRolls, freeRollOn, freeEvery,
+                        freeAmount, chancePct, saltPct, avgSSR,
+                        bestSSR, worstSSR, pityOn, pityAt, numSims }) {
+  const freeTotal  = freeRollOn ? Math.floor(paidRolls / freeEvery) * freeAmount : 0;
+  const grandTotal = paidRolls + freeTotal;
+
+  // Qualitative descriptor
+  const qual =
+    chancePct >= 90 ? 'สูงมาก 🔥' :
+    chancePct >= 70 ? 'ค่อนข้างสูง 😊' :
+    chancePct >= 50 ? 'ปานกลาง 😐' :
+    chancePct >= 30 ? 'ค่อนข้างต่ำ 😬' : 'ต่ำมาก 😭';
+
+  const freeNote = freeRollOn
+    ? `โดยมีสิทธิ์ Free Roll เพิ่มอีก <strong>${fmtNum(freeTotal)}</strong> ครั้ง`
+      + ` รวมสุ่มทั้งหมด <strong>${fmtNum(grandTotal)}</strong> ครั้ง`
+    : `รวมสุ่มทั้งหมด <strong>${fmtNum(grandTotal)}</strong> ครั้ง`;
+
+  const pityNote = pityOn
+    ? `เปิดใช้ระบบ Pity (การันตี SSR ทุก ${fmtNum(pityAt)} ครั้งที่ไม่ได้ SSR)`
+    : 'ไม่ได้เปิดระบบ Pity';
+
+  $('mcInsight').innerHTML = `
+    <p>🎯 <strong>สรุปผล:</strong>
+       หากคุณเติมเงิน <strong>${fmtNum(budget)} บาท</strong>
+       ด้วยค่า Roll <strong>${costEach} บาท/ครั้ง</strong>
+       จะซื้อได้ <strong>${fmtNum(paidRolls)}</strong> ครั้ง — ${freeNote}</p>
+
+    <p>✨ <strong>โอกาสได้ SSR อย่างน้อย 1 ชิ้น: ${chancePct.toFixed(1)}%</strong>
+       — ถือว่า${qual}</p>
+
+    <p>😭 <strong>Salt Rate (ไม่ได้ SSR เลย): ${saltPct.toFixed(1)}%</strong>
+       — ผู้เล่น ${saltPct.toFixed(1)}% จาก ${fmtNum(numSims)} คนที่จำลอง
+       ไม่ได้ SSR แม้แต่ชิ้นเดียว</p>
+
+    <p>📊 SSR <strong>เฉลี่ย ${avgSSR.toFixed(2)} ชิ้น</strong>/ผู้เล่น &nbsp;|&nbsp;
+       Best <strong>${fmtNum(bestSSR)} ชิ้น</strong> &nbsp;|&nbsp;
+       Worst <strong>${fmtNum(worstSSR)} ชิ้น</strong></p>
+
+    <p>⚙️ ${pityNote}</p>
+
+    <p style="font-size:.79rem;color:var(--tx3)">
+      * จำลองผ่าน Monte Carlo (${fmtNum(numSims)} iterations)
+      ตามทฤษฎีความน่าจะเป็น — ผลจริงในเกมอาจแตกต่างกันได้
+    </p>`;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MC SSR DISTRIBUTION CHART
+───────────────────────────────────────────────────────────── */
+function renderMCChart(ssrDist, numSims) {
+  if (chartMCInstance) chartMCInstance.destroy();
+
+  const keys   = Object.keys(ssrDist).map(Number).sort((a, b) => a - b);
+  const labels = keys.map(k => `${k} SSR`);
+  const data   = keys.map(k => +((ssrDist[k] / numSims) * 100).toFixed(2));
+
+  // Colour ramp: 0 SSR = slate, 1 = blue, 2 = purple, 3+ = gold
+  const bgColors = keys.map(k =>
+    k === 0 ? 'rgba(148,163,184,.65)' :
+    k === 1 ? 'rgba(96,165,250,.65)'  :
+    k === 2 ? 'rgba(192,132,252,.65)' :
+              'rgba(251,191,36,.65)'
+  );
+  const bdColors = keys.map(k =>
+    k === 0 ? '#94A3B8' :
+    k === 1 ? '#60A5FA' :
+    k === 2 ? '#C084FC' :
+              '#FBBF24'
+  );
+
+  chartMCInstance = new Chart($('mcChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'สัดส่วนผู้เล่น (%)',
+        data,
+        backgroundColor: bgColors,
+        borderColor:     bdColors,
+        borderWidth: 2,
+        borderRadius: 7,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display:false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.raw}% ของผู้เล่นทั้งหมด`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: v => v + '%' },
+          grid: { color:'rgba(226,232,240,.6)' }
+        },
+        x: { grid: { display:false } }
+      }
+    }
+  });
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CSV EXPORT — MONTE CARLO
+───────────────────────────────────────────────────────────── */
+/**
+ * Export one row per simulated player showing their full outcome breakdown.
+ * This satisfies the "Player POV Summary CSV" requirement.
+ */
+function exportMCCSV() {
+  if (!mcPlayerData.length) return;
+
+  let csv = 'Player #,Total Rolls,SSR Count,SR Count,R Count,N Count\n';
+  mcPlayerData.forEach((p, i) => {
+    csv += `${i + 1},${p.totalRolls},${p.SSR},${p.SR},${p.R},${p.N}\n`;
+  });
+
+  downloadCSV(csv, 'bunnychuu_montecarlo_players.csv');
+}
+
+/* ─────────────────────────────────────────────────────────────
+   HISTORY TAB
+───────────────────────────────────────────────────────────── */
+function renderHistory() {
+  const feed = $('histFeed');
+
+  if (!rollHistory.length) {
+    feed.innerHTML = `
+      <div class="empty-state">
+        <div class="emo">🐰</div>
+        <p>ยังไม่มีประวัติการสุ่ม<br>ไปที่ "จำลองเดี่ยว" แล้วกด เริ่มการจำลอง!</p>
+      </div>`;
+    return;
+  }
+
+  feed.innerHTML = rollHistory.map(r => `
+    <div class="hist-item ${r.rarity.toLowerCase()}">
+      <span style="font-size:1.1rem">${RARITY_EMO[r.rarity]}</span>
+      <span class="badge badge-${r.rarity.toLowerCase()}">${r.rarity}</span>
+      <span class="hist-name">${escHtml(r.itemName)}</span>
+      <span class="hist-roll">Roll #${r.roll}</span>
+      ${r.cost > 0 ? `<span class="hist-cost">${r.cost}฿</span>` : ''}
+    </div>`).join('');
+}
+
+function clearHistory() {
+  rollHistory = [];
+  renderHistory();
+}
+
+/* ─────────────────────────────────────────────────────────────
+   BOOTSTRAP
+───────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  renderItemTable(); // populate pool table with default items
+  onRateInput();     // display initial rate validation state
+  renderHistory();   // show empty-state in history tab
 });
 </script>
 </body>
